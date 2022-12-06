@@ -1,61 +1,79 @@
 import PyPDF2
 import re
+import os
 import csv
+import glob
+from dateutil import parser
+from datetime import datetime
 
 # Compile the regular expression
-date_regex = re.compile(r'Date (\d{2}-\d{2}-\d{4})')
-time_regex = r"(\d{1,2}):(\d{2})\s+(AM|PM)"
-currency_line_regex = re.compile(r"([A-Za-z ]+)\s+(\S+/INR)\s+(\d{1,3}\.\d{2})\s+(\d{1,3}\.\d{2})\s+(\d{1,3}\.\d{2})\s+(\d{1,3}\.\d{2})\s+(\d{1,3}\.\d{2})\s+(\d{1,3}\.\d{2})\s+(\d{1,3}\.\d{2})\s+(\d{1,3}\.\d{2})\s+(\d{1,3}\.\d{2})")
+currency_line_regex = re.compile(
+    r"([A-Za-z ]+)\s+(\S+/INR)\s+(\d{1,3}\.\d{2})\s+(\d{1,3}\.\d{2})\s+(\d{1,3}\.\d{2})\s+(\d{1,3}\.\d{2})\s+(\d{1,3}\.\d{2})\s+(\d{1,3}\.\d{2})\s+(\d{1,3}\.\d{2})\s+(\d{1,3}\.\d{2})\s+(\d{1,3}\.\d{2})"
+)
 header_row_regex = re.compile("(([A-Z]{2,4}) (BUY|SELL))")
 
-file_path = '/Users/sahilgupta/FOREX_CARD_RATES.pdf'
+all_pdfs = glob.glob("/Users/sahilgupta/code/sbi-tt-rates-historical/*.pdf")
 
-with open(file_path, 'rb') as pdf_file:
-    # Create a PDF reader object
-    reader = PyPDF2.PdfFileReader(pdf_file)
+file_path = "/Users/sahilgupta/FOREX_CARD_RATES.pdf"
+for file_path in all_pdfs:
+    with open(file_path, "rb") as pdf_file:
+        # Create a PDF reader object
+        try:
+            reader = PyPDF2.PdfFileReader(pdf_file, strict=False)
+        except OSError:
+            continue
 
-    # 1st page
-    page = reader.getPage(0)
-    # Extract the text from the page
-    text = page.extractText()
+        # 1st page
+        page = reader.getPage(0)
+        # Extract the text from the page
+        text = page.extractText()
 
-    match = date_regex.search(text)
-    date = match.groups()[0]
+        for line in text.split("\n"):
+            if line.startswith("Date"):
+                date = parser.parse(line, fuzzy=True, dayfirst=True)
+            elif line.startswith("Time"):
+                time = parser.parse(line, fuzzy=True)
 
-    time = re.search(time_regex, text).group()
+        if not date or not time:
+            raise Exception("meh")
 
-    # 2nd page
-    page = reader.getPage(1)
-    # Extract the text from the page
-    text = page.extractText()
-    lines = text.split('\n')
+        # 2nd page
+        page = reader.getPage(1)
+        # Extract the text from the page
+        text = page.extractText()
+        lines = text.split("\n")
 
-    header_row = lines[0]
-    headers = ["DATE"] + [x[0] for x in re.findall(header_row_regex, header_row)]
+        header_row = lines[0]
+        headers = ["DATE"] + [x[0] for x in re.findall(header_row_regex, header_row)]
 
-    for line in lines[1:]:
-        match = re.search(currency_line_regex, line)
-        if match:
-            currency = match.groups()[1].split('/')[0]
-            rates = match.groups()[2:]
+        for line in lines[1:]:
+            match = re.search(currency_line_regex, line)
+            if match:
+                currency = match.groups()[1].split("/")[0]
+                rates = match.groups()[2:]
 
-            date_time = f"{date} {time}"
-            new_data = dict(zip(headers, (date_time, ) + rates))
+                date_time = f"{date.strftime('%Y-%m-%d')} {time.strftime('%H:%M')}"
+                new_data = dict(zip(headers, (date_time,) + rates))
 
-            csv_file_path = f'{currency}.csv'
+                csv_file_path = f"{currency}.csv"
+                rows = []
 
-            with open(csv_file_path, 'r', encoding='UTF8') as f_in:
-                reader = csv.DictReader(f_in)
-                headers = reader.fieldnames
-                rows = [x for x in reader]
+                if os.path.exists(csv_file_path):
+                    with open(csv_file_path, "r", encoding="UTF8") as f_in:
+                        reader = csv.DictReader(f_in)
+                        headers = reader.fieldnames
+                        rows = [x for x in reader]
 
-            with open(csv_file_path, 'w', encoding='UTF8') as f_out:
-                print(headers)
-                writer = csv.DictWriter(f_out, fieldnames=headers)
+                rows.append(new_data)
+                rows_uniq = list({v['DATE']:v for v in rows}.values())
 
-                # write the header
-                writer.writeheader()
-                writer.writerow(new_data)
+                rows_uniq.sort(key=lambda x: datetime.strptime(x['DATE'], "%Y-%m-%d %H:%M"))
 
-                for row in rows:
-                    writer.writerow(row)
+                with open(csv_file_path, "w", encoding="UTF8") as f_out:
+                    writer = csv.DictWriter(f_out, fieldnames=headers)
+
+                    # write the header
+                    writer.writeheader()
+
+                    for row in rows_uniq:
+                        writer.writerow(row)
