@@ -15,7 +15,9 @@ currency_line_regex = re.compile(
 )
 header_row_regex = re.compile("(([A-Z]{2,4}) (BUY|SELL))")
 
-SBI_DAILY_RATES_URL = "https://bank.sbi/documents/16012/1400784/FOREX_CARD_RATES.pdf"
+SBI_DAILY_RATES_URL = (
+    "https://www.sbi.co.in/documents/16012/1400784/FOREX_CARD_RATES.pdf"
+)
 
 
 def extract_text(file_content):
