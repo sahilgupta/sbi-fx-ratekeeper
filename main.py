@@ -96,7 +96,7 @@ def download_latest_file():
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36"
     }
 
-    response = requests.get(SBI_DAILY_RATES_URL, headers=headers)
+    response = requests.get(SBI_DAILY_RATES_URL, headers=headers, timeout=3)
     response.raise_for_status()
 
     now = datetime.now()
