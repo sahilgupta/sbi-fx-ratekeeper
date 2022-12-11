@@ -48,6 +48,8 @@ def dump_data(file_content):
         page_1_text, page_2_text = extract_text(file_content)
     except PyPDF2.errors.PdfReadError:
         return
+    except ValueError:
+        return
 
     extracted_date_time = extract_date_time(page_1_text)
 
