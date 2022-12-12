@@ -19,6 +19,8 @@ SBI_DAILY_RATES_URL = (
     "https://www.sbi.co.in/documents/16012/1400784/FOREX_CARD_RATES.pdf"
 )
 
+FILE_NAME_FORMAT = "%Y-%m-%d %H:%M"
+
 
 def extract_text(file_content):
     reader = PyPDF2.PdfFileReader(file_content, strict=False)
@@ -63,12 +65,9 @@ def dump_data(file_content):
     for line in lines[1:]:
         match = re.search(currency_line_regex, line)
         if match:
+            formatted_date_time = extracted_date_time.strftime(FILE_NAME_FORMAT)
+
             currency = match.groups()[1].split("/")[0]
-            rates = match.groups()[2:]
-
-            formatted_date_time = f"{extracted_date_time.strftime('%Y-%m-%d %H:%M')}"
-            new_data = dict(zip(headers, (formatted_date_time,) + rates))
-
             csv_file_path = f"SBI_REFERENCE_RATES_{currency}.csv"
             rows = []
 
@@ -78,10 +77,12 @@ def dump_data(file_content):
                     headers = reader.fieldnames
                     rows = [x for x in reader]
 
+            rates = match.groups()[2:]
+            new_data = dict(zip(headers, (formatted_date_time,) + rates))
             rows.append(new_data)
             rows_uniq = list({v["DATE"]: v for v in rows}.values())
 
-            rows_uniq.sort(key=lambda x: datetime.strptime(x["DATE"], "%Y-%m-%d %H:%M"))
+            rows_uniq.sort(key=lambda x: datetime.strptime(x["DATE"], FILE_NAME_FORMAT))
 
             with open(csv_file_path, "w", encoding="UTF8") as f_out:
                 writer = csv.DictWriter(f_out, fieldnames=headers)
@@ -96,29 +97,29 @@ def download_latest_file():
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36"
     }
 
-    response = requests.get(SBI_DAILY_RATES_URL, headers=headers, timeout=3)
+    response = requests.get(SBI_DAILY_RATES_URL, headers=headers, timeout=5)
     response.raise_for_status()
 
     now = datetime.now()
 
     # Construct the directory path
-    dir_path = os.path.join(str(now.year), str(now.month), str(now.day))
+    dir_path = os.path.join(str(now.year), str(now.month))
 
     # Create the directory if it doesn't exist
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
 
-    file_name = now.strftime("%Y-%m-%d %H:%M.pdf")
+    pdf_name = now.strftime(FILE_NAME_FORMAT) + ".pdf"
 
     # Write to a file in the new directory
-    with open(os.path.join(dir_path, file_name), "wb") as f:
+    with open(os.path.join(dir_path, pdf_name), "wb") as f:
         f.write(response.content)
 
     return io.BytesIO(response.content)
 
+
 def parse_historical_data():
     all_pdfs = glob.glob("/Users/sahilgupta/code/sbi-tt-rates-historical/*.pdf")
-    # file_path = "/Users/sahilgupta/FOREX_CARD_RATES.pdf"
 
     for file_path in all_pdfs:
         print(file_path)
