@@ -35,5 +35,14 @@ jobs:
     - name: Download and save file
       run: python main.py
 
+    - name: Get current time
+      uses: josStorer/get-current-time@v2.0.2
+      id: current-time
+      with:
+        format: "dddd, MMMM Do YYYY, h:mm:ss a"
+        utcOffset: "+05:30"
+
       # Commit the PDF and the updated rates in csv
     - uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: "Auto Commit: SBI rates at ${{ steps.current-time.outputs.formattedTime }}"
