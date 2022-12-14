@@ -19,7 +19,8 @@ SBI_DAILY_RATES_URL = (
     "https://www.sbi.co.in/documents/16012/1400784/FOREX_CARD_RATES.pdf"
 )
 
-FILE_NAME_FORMAT = "%Y-%m-%d %H:%M"
+FILE_NAME_FORMAT = "%Y-%m-%d"
+FILE_NAME_WITH_TIME_FORMAT = f"{FILE_NAME_FORMAT} %H:%M"
 
 
 def extract_text(file_content):
@@ -65,7 +66,7 @@ def dump_data(file_content):
     for line in lines[1:]:
         match = re.search(currency_line_regex, line)
         if match:
-            formatted_date_time = extracted_date_time.strftime(FILE_NAME_FORMAT)
+            formatted_date_time = extracted_date_time.strftime(FILE_NAME_WITH_TIME_FORMAT)
 
             currency = match.groups()[1].split("/")[0]
             csv_file_path = f"SBI_REFERENCE_RATES_{currency}.csv"
@@ -82,7 +83,7 @@ def dump_data(file_content):
             rows.append(new_data)
             rows_uniq = list({v["DATE"]: v for v in rows}.values())
 
-            rows_uniq.sort(key=lambda x: datetime.strptime(x["DATE"], FILE_NAME_FORMAT))
+            rows_uniq.sort(key=lambda x: datetime.strptime(x["DATE"], FILE_NAME_WITH_TIME_FORMAT))
 
             with open(csv_file_path, "w", encoding="UTF8") as f_out:
                 writer = csv.DictWriter(f_out, fieldnames=headers)
