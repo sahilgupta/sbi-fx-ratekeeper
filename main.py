@@ -104,7 +104,7 @@ def download_latest_file():
     now = datetime.now()
 
     # Construct the directory path
-    dir_path = os.path.join(str(now.year), str(now.month))
+    dir_path = os.path.join("pdf_files", str(now.year), str(now.month))
 
     # Create the directory if it doesn't exist
     if not os.path.exists(dir_path):
