@@ -69,7 +69,7 @@ def dump_data(file_content):
             formatted_date_time = extracted_date_time.strftime(FILE_NAME_WITH_TIME_FORMAT)
 
             currency = match.groups()[1].split("/")[0]
-            csv_file_path = f"SBI_REFERENCE_RATES_{currency}.csv"
+            csv_file_path = os.path.join("csv_files", f"SBI_REFERENCE_RATES_{currency}.csv")
             rows = []
 
             if os.path.exists(csv_file_path):
