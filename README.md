@@ -1,20 +1,21 @@
 # SBI Historical Forex Rates
 
-Section 26 of the ITR advises using SBI TTBR as reference foreign exchange rates for calculating capital gains.
+Section 26 of the ITR advises using SBI TTBR as reference foreign exchange rates for calculating capital gains. SBI publishes these forex rates daily but does not provide a way to access  historical data. Well, no more.
 
-The rates are:
 
-- Updated daily in the CSV files, automatically
-- Easily accessible in Microsoft Excel or Google Sheets
+This project downloads and stores daily SBI forex rates in a CSV file, with separate files for each currency. For example, SBI_REFERENCE_RATES_USD.csv has only the USD data.
+
+- The new rates are added daily, automatically
+- Fully compatible with Microsoft Excel or Google Sheets
 
 **Note:**
 
-If you want to double check, the PDF files downloaded from SBI servers are available in the *pdf_files* folder. The reference rates to be used are on the 2nd page of the PDF.
+The PDF files from SBI servers are also available in the *pdf_files* folder. The reference rates are on the 2nd page of each PDF.
 
 ## Known Limitations
 
-Data prior to Dec 2022 is not complete. I am not aware of any good way to backfill it. Please feel free to reach out if you know of a credible way.
+Note that data prior to Dec 2022 is NOT complete and there is no known reliable way to backfill it. Please reach out to me if you know of workaround.
 
 ### Credits
 
-Data prior to Dec 2022 would not have been possible if not for the amazing work of [Shivam Khandelwal](https://github.com/skbly7). He has been saving the PDF files of SBI's daily forex rates on GitHub since 2020 at [https://github.com/skbly7/sbi-tt-rates-historical]
+Credit for data prior to Dec 2022 goes to the amazing work of [Shivam Khandelwal](https://github.com/skbly7). He has been saving the PDF files of SBI's daily forex rates on GitHub since 2020 at [https://github.com/skbly7/sbi-tt-rates-historical]
