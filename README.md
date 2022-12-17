@@ -18,4 +18,6 @@ Note that data prior to Dec 2022 is NOT complete and there is no known reliable 
 
 ### Credits
 
-Credit for data prior to Dec 2022 goes to the amazing work of [Shivam Khandelwal](https://github.com/skbly7). He has been saving the PDF files of SBI's daily forex rates on GitHub since 2020 at [https://github.com/skbly7/sbi-tt-rates-historical]
+Credit for bulk of the data prior to Dec 2022 goes to the amazing work of [Shivam Khandelwal](https://github.com/skbly7). He has been saving the PDF files of SBI's daily forex rates on GitHub since 2020 at [https://github.com/skbly7/sbi-tt-rates-historical]
+
+Some of the old data has also been downloaded from Internet Archive Wayback Machine.
