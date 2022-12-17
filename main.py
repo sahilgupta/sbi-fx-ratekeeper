@@ -24,7 +24,7 @@ FILE_NAME_WITH_TIME_FORMAT = f"{FILE_NAME_FORMAT} %H:%M"
 
 
 def extract_text(file_content):
-    reader = PyPDF2.PdfFileReader(file_content, strict=False)
+    reader = PyPDF2.PdfReader(file_content, strict=False)
 
     # Extract the text from the pages
     text_page_1 = reader.getPage(0).extractText()
@@ -48,7 +48,7 @@ def extract_date_time(text):
         return parsed_datetime
 
 
-def dump_data(file_content):
+def dump_data(file_content, save_file=False):
     try:
         page_1_text, page_2_text = extract_text(file_content)
     except PyPDF2.errors.PdfReadError:
@@ -58,6 +58,9 @@ def dump_data(file_content):
 
     extracted_date_time = extract_date_time(page_1_text)
 
+    if save_file:
+        save_pdf_file(file_content, extracted_date_time)
+
     lines = page_2_text.split("\n")
 
     header_row = lines[0]
@@ -66,10 +69,14 @@ def dump_data(file_content):
     for line in lines[1:]:
         match = re.search(currency_line_regex, line)
         if match:
-            formatted_date_time = extracted_date_time.strftime(FILE_NAME_WITH_TIME_FORMAT)
+            formatted_date_time = extracted_date_time.strftime(
+                FILE_NAME_WITH_TIME_FORMAT
+            )
 
             currency = match.groups()[1].split("/")[0]
-            csv_file_path = os.path.join("csv_files", f"SBI_REFERENCE_RATES_{currency}.csv")
+            csv_file_path = os.path.join(
+                "csv_files", f"SBI_REFERENCE_RATES_{currency}.csv"
+            )
             rows = []
 
             if os.path.exists(csv_file_path):
@@ -83,7 +90,9 @@ def dump_data(file_content):
             rows.append(new_data)
             rows_uniq = list({v["DATE"]: v for v in rows}.values())
 
-            rows_uniq.sort(key=lambda x: datetime.strptime(x["DATE"], FILE_NAME_WITH_TIME_FORMAT))
+            rows_uniq.sort(
+                key=lambda x: datetime.strptime(x["DATE"], FILE_NAME_WITH_TIME_FORMAT)
+            )
 
             with open(csv_file_path, "w", encoding="UTF8") as f_out:
                 writer = csv.DictWriter(f_out, fieldnames=headers)
@@ -91,6 +100,23 @@ def dump_data(file_content):
                 writer.writeheader()
                 for row in rows_uniq:
                     writer.writerow(row)
+
+
+def save_pdf_file(file_content, date_time):
+
+    # Construct the directory path
+    dir_path = os.path.join("pdf_files", str(date_time.year), str(date_time.month))
+
+    # Create the directory if it doesn't exist
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+
+    pdf_name = date_time.strftime(FILE_NAME_FORMAT) + ".pdf"
+
+    # Write to a file in the new directory
+    with open(os.path.join(dir_path, pdf_name), "wb") as f:
+        file_content.seek(0)
+        f.write(file_content.getbuffer())
 
 
 def download_latest_file():
@@ -101,30 +127,22 @@ def download_latest_file():
     response = requests.get(SBI_DAILY_RATES_URL, headers=headers, timeout=5)
     response.raise_for_status()
 
-    now = datetime.now()
+    bytestream = io.BytesIO(response.content)
+    save_pdf_file(bytestream, date_time=datetime.now())
 
-    # Construct the directory path
-    dir_path = os.path.join("pdf_files", str(now.year), str(now.month))
-
-    # Create the directory if it doesn't exist
-    if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
-
-    pdf_name = now.strftime(FILE_NAME_FORMAT) + ".pdf"
-
-    # Write to a file in the new directory
-    with open(os.path.join(dir_path, pdf_name), "wb") as f:
-        f.write(response.content)
-
+    # Need to convert to a byte stream for PDF parser to be able to seek to different address
     return io.BytesIO(response.content)
 
 
 def parse_historical_data():
-    all_pdfs = glob.glob("/Users/sahilgupta/code/sbi-tt-rates-historical/*.pdf")
+    all_pdfs = sorted(glob.glob("/Users/sahilgupta/code/sbi-tt-rates-historical/*.pdf"))
 
     for file_path in all_pdfs:
-        print(file_path)
-        dump_data(file_path)
+        with open(file_path, "rb") as f:
+            # Need to convert to a byte stream for PDF parser to be able to seek to different address
+            bytestream = io.BytesIO(f.read())
+
+            dump_data(bytestream, save_file=True)
 
 
 # parse_historical_data()
