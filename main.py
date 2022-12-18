@@ -5,9 +5,20 @@ import os
 import os.path
 import csv
 import glob
+import logging
 from dateutil import parser
 from datetime import datetime
 import requests
+
+
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+file_handler = logging.FileHandler("log.txt")
+file_handler.setLevel(logging.INFO)
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+
 
 # Compile the regular expression
 currency_line_regex = re.compile(
@@ -52,11 +63,14 @@ def dump_data(file_content, save_file=False):
     try:
         page_1_text, page_2_text = extract_text(file_content)
     except PyPDF2.errors.PdfReadError:
+        logger.exception("")
         return
     except ValueError:
+        logger.exception("")
         return
 
     extracted_date_time = extract_date_time(page_1_text)
+    logger.debug(f"Successfully parsed date and time {extracted_date_time}")
 
     if save_file:
         save_pdf_file(file_content, extracted_date_time)
@@ -65,6 +79,8 @@ def dump_data(file_content, save_file=False):
 
     header_row = lines[0]
     headers = ["DATE"] + [x[0] for x in re.findall(header_row_regex, header_row)]
+
+    new_data = None
 
     for line in lines[1:]:
         match = re.search(currency_line_regex, line)
@@ -87,6 +103,8 @@ def dump_data(file_content, save_file=False):
 
             rates = match.groups()[2:]
             new_data = dict(zip(headers, (formatted_date_time,) + rates))
+            logger.debug(f"New rates found: {new_data}")
+
             rows.append(new_data)
             rows_uniq = list({v["DATE"]: v for v in rows}.values())
 
@@ -100,6 +118,10 @@ def dump_data(file_content, save_file=False):
                 writer.writeheader()
                 for row in rows_uniq:
                     writer.writerow(row)
+
+                logger.debug(f"Updated CSV file with {new_data}")
+    if not new_data:
+        logger.exception(f"No data matching the currency regex found")
 
 
 def save_pdf_file(file_content, date_time):
@@ -134,17 +156,24 @@ def download_latest_file():
     return io.BytesIO(response.content)
 
 
-def parse_historical_data():
-    all_pdfs = sorted(glob.glob("/Users/sahilgupta/code/sbi-tt-rates-historical/*.pdf"))
+def parse_historical_data(save_file=True):
+    all_pdfs = sorted(
+        glob.glob("/Users/sahilgupta/code/sbi_forex_rates/**/*.pdf", recursive=True)
+    )
 
     for file_path in all_pdfs:
+        logger.info(f"Parsing {file_path}")
         with open(file_path, "rb") as f:
             # Need to convert to a byte stream for PDF parser to be able to seek to different address
             bytestream = io.BytesIO(f.read())
 
-            dump_data(bytestream, save_file=True)
+            try:
+                dump_data(bytestream, save_file)
+            except:
+                logger.exception(f"Ran into error for {file_path}")
 
 
-# parse_historical_data()
-file_content = download_latest_file()
-dump_data(file_content)
+if __name__ == "__main__":
+    parse_historical_data(save_file=False)
+    # file_content = download_latest_file()
+    # dump_data(file_content)
