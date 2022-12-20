@@ -175,6 +175,6 @@ def parse_historical_data(save_file=True):
 
 
 if __name__ == "__main__":
-    parse_historical_data(save_file=False)
-    # file_content = download_latest_file()
-    # dump_data(file_content)
+    # parse_historical_data(save_file=False)
+    file_content = download_latest_file()
+    dump_data(file_content)
