@@ -1,15 +1,16 @@
-import io
-import PyPDF2
-import re
-import os
-import os.path
 import csv
 import glob
+import io
 import logging
-from dateutil import parser
+import os
+import os.path
+import re
 from datetime import datetime
-import requests
+from urllib3.util.retry import Retry
 
+import PyPDF2
+import requests
+from dateutil import parser
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -20,20 +21,22 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 
-# Compile the regular expression
-currency_line_regex = re.compile(
-    r"([A-Za-z ]+)\s+(\S+/INR)\s+((?:\d{1,3}\.\d{1,2})|(?:\d{1,3}\.\d)|(?:\d{1,3}))\s+((?:\d{1,3}\.\d{1,2})|(?:\d{1,3}\.\d)|(?:\d{1,3}))\s+((?:\d{1,3}\.\d{1,2})|(?:\d{1,3}\.\d)|(?:\d{1,3}))\s+((?:\d{1,3}\.\d{1,2})|(?:\d{1,3}\.\d)|(?:\d{1,3}))\s+((?:\d{1,3}\.\d{1,2})|(?:\d{1,3}\.\d)|(?:\d{1,3}))\s+((?:\d{1,3}\.\d{1,2})|(?:\d{1,3}\.\d)|(?:\d{1,3}))\s+((?:\d{1,3}\.\d{1,2})|(?:\d{1,3}\.\d)|(?:\d{1,3}))\s+((?:\d{1,3}\.\d{1,2})|(?:\d{1,3}\.\d)|(?:\d{1,3}))\s+((?:\d{1,3}\.\d{1,2})|(?:\d{1,3}\.\d)|(?:\d{1,3}))"
-)
-
-header_row_regex = re.compile("(([A-Z]{2,4}) (BUY|SELL))")
-
 SBI_DAILY_RATES_URL = (
     "https://www.sbi.co.in/documents/16012/1400784/FOREX_CARD_RATES.pdf"
+)
+SBI_DAILY_RATES_URL_FALLBACK = (
+    "https://bank.sbi/documents/16012/1400784/FOREX_CARD_RATES.pdf"
 )
 
 FILE_NAME_FORMAT = "%Y-%m-%d"
 FILE_NAME_WITH_TIME_FORMAT = f"{FILE_NAME_FORMAT} %H:%M"
 
+
+# Compile the regular expression
+currency_line_regex = re.compile(
+    r"([A-Za-z ]+)\s+(\S+/INR)\s+((?:\d{1,3}\.\d{1,2})|(?:\d{1,3}\.\d)|(?:\d{1,3}))\s+((?:\d{1,3}\.\d{1,2})|(?:\d{1,3}\.\d)|(?:\d{1,3}))\s+((?:\d{1,3}\.\d{1,2})|(?:\d{1,3}\.\d)|(?:\d{1,3}))\s+((?:\d{1,3}\.\d{1,2})|(?:\d{1,3}\.\d)|(?:\d{1,3}))\s+((?:\d{1,3}\.\d{1,2})|(?:\d{1,3}\.\d)|(?:\d{1,3}))\s+((?:\d{1,3}\.\d{1,2})|(?:\d{1,3}\.\d)|(?:\d{1,3}))\s+((?:\d{1,3}\.\d{1,2})|(?:\d{1,3}\.\d)|(?:\d{1,3}))\s+((?:\d{1,3}\.\d{1,2})|(?:\d{1,3}\.\d)|(?:\d{1,3}))\s+((?:\d{1,3}\.\d{1,2})|(?:\d{1,3}\.\d)|(?:\d{1,3}))"
+)
+header_row_regex = re.compile("(([A-Z]{2,4}) (BUY|SELL))")
 
 def extract_text(file_content):
     reader = PyPDF2.PdfReader(file_content, strict=False)
@@ -147,7 +150,16 @@ def download_latest_file():
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36"
     }
 
-    response = requests.get(SBI_DAILY_RATES_URL, headers=headers, timeout=5)
+    s = requests.Session()
+
+    retries = Retry(total=3, backoff_factor=3, status_forcelist=[500, 502, 503, 504])
+    s.mount("https://", requests.adapters.HTTPAdapter(max_retries=retries))
+
+    try:
+        response = s.get(SBI_DAILY_RATES_URL, headers=headers, timeout=5)
+    except Exception as e:
+        response = s.get(SBI_DAILY_RATES_URL_FALLBACK, headers=headers, timeout=5)
+
     response.raise_for_status()
 
     bytestream = io.BytesIO(response.content)
