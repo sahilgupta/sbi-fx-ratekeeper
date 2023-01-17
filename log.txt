@@ -1,0 +1,1 @@
+2023-01-17 15:46:29,564 - urllib3.connectionpool - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='www.sbi.co.in', port=443): Read timed out. (read timeout=5)")': /documents/16012/1400784/FOREX_CARD_RATES.pdf
