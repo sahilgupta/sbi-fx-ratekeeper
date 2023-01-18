@@ -152,13 +152,13 @@ def download_latest_file():
 
     s = requests.Session()
 
-    retries = Retry(total=3, backoff_factor=3, status_forcelist=[500, 502, 503, 504])
+    retries = Retry(total=5, backoff_factor=3, status_forcelist=[500, 502, 503, 504])
     s.mount("https://", requests.adapters.HTTPAdapter(max_retries=retries))
 
     try:
-        response = s.get(SBI_DAILY_RATES_URL, headers=headers, timeout=5)
+        response = s.get(SBI_DAILY_RATES_URL, headers=headers, timeout=10)
     except Exception as e:
-        response = s.get(SBI_DAILY_RATES_URL_FALLBACK, headers=headers, timeout=5)
+        response = s.get(SBI_DAILY_RATES_URL_FALLBACK, headers=headers, timeout=10)
 
     response.raise_for_status()
 
