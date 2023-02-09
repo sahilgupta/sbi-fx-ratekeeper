@@ -10,6 +10,7 @@ from urllib3.util.retry import Retry
 
 import PyPDF2
 import requests
+from requests.exceptions import RequestException
 from dateutil import parser
 
 logger = logging.getLogger()
@@ -157,10 +158,13 @@ def download_latest_file():
 
     try:
         response = s.get(SBI_DAILY_RATES_URL, headers=headers, timeout=10)
-    except Exception as e:
-        response = s.get(SBI_DAILY_RATES_URL_FALLBACK, headers=headers, timeout=10)
-
-    response.raise_for_status()
+        response.raise_for_status()
+    except RequestException as e:
+        try:
+            response = s.get(SBI_DAILY_RATES_URL_FALLBACK, headers=headers, timeout=10)
+            response.raise_for_status()
+        except RequestException as e:
+            raise Exception("Unable to retrieve PDF from both the URLs. Error: " + str(e))
 
     bytestream = io.BytesIO(response.content)
     save_pdf_file(bytestream, date_time=datetime.now())
