@@ -43,17 +43,35 @@ header_row_regex = re.compile("(([A-Z]{2,4}) (BUY|SELL))")
 def extract_date_time(reader_obj):
     text_page_1 = reader_obj.getPage(0).extractText()
 
+    parsed_date = None
+    parsed_time = None
+
     for line in text_page_1.split("\n"):
         if line.startswith("Date"):
-            date = parser.parse(line, fuzzy=True, dayfirst=True).date()
+            parsed_date = parser.parse(line, fuzzy=True, dayfirst=True).date()
+
+            # sometimes the dates are formatted in the US style, double check if there's a confusion
+            parsed_date_us_style = parser.parse(line, fuzzy=True).date()
+
+            if parsed_date != parsed_date_us_style:
+                # Double check the date from EXIF data, and use that one.
+                creation_date = reader_obj.metadata.creation_date.date()
+
+                if (
+                    creation_date == parsed_date
+                    or creation_date == parsed_date_us_style
+                ):
+                    parsed_date = creation_date
+                else:
+                    raise Exception(f"None of the date formats seem to match. {line}")
 
         elif line.startswith("Time"):
-            time = parser.parse(line, fuzzy=True).time()
+            parsed_time = parser.parse(line, fuzzy=True).time()
 
-    if not date or not time:
+    if not parsed_date or not parsed_time:
         return None
 
-    parsed_datetime = datetime.combine(date, time)
+    parsed_datetime = datetime.combine(parsed_date, parsed_time)
 
     return parsed_datetime
 
@@ -70,12 +88,16 @@ def dump_data(file_content, save_file=False):
 
     extracted_date_time = extract_date_time(reader)
 
+    if not extracted_date_time:
+        logger.exception("Unable to extract date and time from the PDF. Aborting.")
+        return
+
     logger.debug(f"Successfully parsed date and time {extracted_date_time}")
 
     if save_file:
         save_pdf_file(file_content, extracted_date_time)
 
-    text_page_2 = reader_obj.getPage(1).extractText()
+    text_page_2 = reader.getPage(1).extractText()
     lines = text_page_2.split("\n")
 
     header_row = lines[0]
