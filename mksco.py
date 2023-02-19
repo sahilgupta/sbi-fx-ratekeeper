@@ -1,11 +1,14 @@
-import os
 import io
+import os
 from datetime import date, timedelta
-import requests
-from main import save_pdf_file, dump_data
+from urllib3.util.retry import Retry
 
-start_date = date(2022, 1, 1)
-end_date = date(2022, 11, 30)
+import requests
+
+from main import dump_data, save_pdf_file
+
+start_date = date(2021, 5, 27)
+end_date = date(2021, 12, 31)
 delta = timedelta(days=1)
 
 while start_date <= end_date:
@@ -18,15 +21,27 @@ while start_date <= end_date:
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36"
     }
 
-    file_path = os.path.join("pdf_files", year, str(start_date.month), f"{year}-{month}-{day}.pdf")
+    file_path = os.path.join(
+        "pdf_files", year, str(start_date.month), f"{year}-{month}-{day}.pdf"
+    )
 
     if not os.path.exists(file_path):
         print(f"PDF not found for {file_path}")
         print(URL)
+
+        s = requests.Session()
+
+        retries = Retry(
+            total=5, backoff_factor=3, status_forcelist=[500, 502, 503, 504]
+        )
+        s.mount("https://", requests.adapters.HTTPAdapter(max_retries=retries))
+
         try:
-            response = requests.get(URL, headers=headers, timeout=5)
+            response = s.get(URL, headers=headers, timeout=5)
             response.raise_for_status()
         except requests.exceptions.HTTPError as error:
+            # catch the 500 server error
+
             if error.response.status_code == 404:
                 print("ran into 404")
         else:
