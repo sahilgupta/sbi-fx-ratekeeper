@@ -39,34 +39,28 @@ currency_line_regex = re.compile(
 )
 header_row_regex = re.compile("(([A-Z]{2,4}) (BUY|SELL))")
 
-def extract_text(file_content):
-    reader = PyPDF2.PdfReader(file_content, strict=False)
 
-    # Extract the text from the pages
-    text_page_1 = reader.getPage(0).extractText()
-    text_page_2 = reader.getPage(1).extractText()
+def extract_date_time(reader_obj):
+    text_page_1 = reader_obj.getPage(0).extractText()
 
-    return text_page_1, text_page_2
-
-
-def extract_date_time(text):
-    for line in text.split("\n"):
+    for line in text_page_1.split("\n"):
         if line.startswith("Date"):
             date = parser.parse(line, fuzzy=True, dayfirst=True).date()
+
         elif line.startswith("Time"):
             time = parser.parse(line, fuzzy=True).time()
 
     if not date or not time:
         return None
-    else:
-        parsed_datetime = datetime.combine(date, time)
 
-        return parsed_datetime
+    parsed_datetime = datetime.combine(date, time)
+
+    return parsed_datetime
 
 
 def dump_data(file_content, save_file=False):
     try:
-        page_1_text, page_2_text = extract_text(file_content)
+        reader = PyPDF2.PdfReader(file_content, strict=False)
     except PyPDF2.errors.PdfReadError:
         logger.exception("")
         return
@@ -74,13 +68,15 @@ def dump_data(file_content, save_file=False):
         logger.exception("")
         return
 
-    extracted_date_time = extract_date_time(page_1_text)
+    extracted_date_time = extract_date_time(reader)
+
     logger.debug(f"Successfully parsed date and time {extracted_date_time}")
 
     if save_file:
         save_pdf_file(file_content, extracted_date_time)
 
-    lines = page_2_text.split("\n")
+    text_page_2 = reader_obj.getPage(1).extractText()
+    lines = text_page_2.split("\n")
 
     header_row = lines[0]
     headers = ["DATE"] + [x[0] for x in re.findall(header_row_regex, header_row)]
