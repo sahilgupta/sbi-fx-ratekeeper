@@ -13,7 +13,8 @@ The PDF files from SBI servers are also available in the *pdf_files* folder. The
 
 ## Known Limitations
 
-Note that data prior to Dec 2022 is NOT complete. While I have made reasonable attempts to backfill it from different sources mentioned in the Credits, it is not 100% complete.
+- Data is only available from Jan 2020 onwards.
+- For some reason, SBI doesn't publish the rates file on all working days; no data is available for such days. You can either get the rates from [RBI Reference Rate Archive](https://www.rbi.org.in/scripts/ReferenceRateArchive.aspx), or from some third-party FX rates vendor such as [OANDA](https://www.oanda.com/fx-for-business/historical-rates).
 
 ### Credits
 
