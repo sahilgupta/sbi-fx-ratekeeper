@@ -40,3 +40,15 @@ Traceback (most recent call last):
   File "/opt/hostedtoolcache/Python/3.10.10/x64/lib/python3.10/site-packages/PyPDF2/_reader.py", line 1465, in _find_eof_marker
     raise PdfReadError("EOF marker not found")
 PyPDF2.errors.PdfReadError: EOF marker not found
+2023-03-01 15:20:51,008 - urllib3.connectionpool - WARNING - Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ProtocolError('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))': /documents/16012/1400784/FOREX_CARD_RATES.pdf
+2023-03-01 15:20:52,461 - root - ERROR - 
+Traceback (most recent call last):
+  File "/home/runner/work/sbi_forex_rates/sbi_forex_rates/main.py", line 81, in dump_data
+    reader = PyPDF2.PdfReader(file_content, strict=False)
+  File "/opt/hostedtoolcache/Python/3.10.10/x64/lib/python3.10/site-packages/PyPDF2/_reader.py", line 317, in __init__
+    self.read(stream)
+  File "/opt/hostedtoolcache/Python/3.10.10/x64/lib/python3.10/site-packages/PyPDF2/_reader.py", line 1409, in read
+    self._find_eof_marker(stream)
+  File "/opt/hostedtoolcache/Python/3.10.10/x64/lib/python3.10/site-packages/PyPDF2/_reader.py", line 1465, in _find_eof_marker
+    raise PdfReadError("EOF marker not found")
+PyPDF2.errors.PdfReadError: EOF marker not found
