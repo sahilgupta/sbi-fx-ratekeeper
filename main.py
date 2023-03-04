@@ -8,8 +8,11 @@ import re
 from datetime import datetime
 from urllib3.util.retry import Retry
 
+import magic
+from fp.fp import FreeProxy
 import PyPDF2
 import requests
+from requests_html import HTMLSession
 from requests.exceptions import RequestException
 from dateutil import parser
 
@@ -165,24 +168,47 @@ def save_pdf_file(file_content, date_time):
 
 
 def download_latest_file():
-    headers = {
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36"
-    }
-
-    s = requests.Session()
+    s = HTMLSession()
 
     retries = Retry(total=5, backoff_factor=3, status_forcelist=[500, 502, 503, 504])
     s.mount("https://", requests.adapters.HTTPAdapter(max_retries=retries))
 
     try:
-        response = s.get(SBI_DAILY_RATES_URL, headers=headers, timeout=10)
+        response = s.get(SBI_DAILY_RATES_URL, timeout=10)
         response.raise_for_status()
     except RequestException as e:
         try:
-            response = s.get(SBI_DAILY_RATES_URL_FALLBACK, headers=headers, timeout=10)
+            response = s.get(
+                SBI_DAILY_RATES_URL_FALLBACK,
+                timeout=10,
+                proxies=proxies,
+            )
             response.raise_for_status()
         except RequestException as e:
-            raise Exception("Unable to retrieve PDF from both the URLs. Error: " + str(e))
+            raise Exception(
+                "Unable to retrieve PDF from both the URLs. Error: " + str(e)
+            )
+
+    # Check the MIME type since the response may be HTML, even with status code 200
+    mime_type = magic.from_buffer(response.content[:128])
+
+    if not mime_type.startswith("PDF document"):
+        logger.info(f"Invalid PDF. Response MIME type seems to be {mime_type}")
+
+        # Use proxies to try downloading the file again
+        for x in range(5):
+            proxy = FreeProxy(timeout=1, rand=True, elite=True, https=True).get()
+            proxies = {"http": proxy}
+
+            response = s.get(SBI_DAILY_RATES_URL, timeout=10, proxies=proxies)
+            response.raise_for_status()
+
+            mime_type = magic.from_buffer(response.content[:128])
+            if mime_type.startswith("PDF document"):
+                logger.info(f"Found a valid PDF in {x+1} try. Breaking away")
+                break
+        else:
+            raise Exception("Was not able to get a valid PDF. Aborting...")
 
     bytestream = io.BytesIO(response.content)
     save_pdf_file(bytestream, date_time=datetime.now())
