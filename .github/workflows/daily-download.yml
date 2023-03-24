@@ -3,8 +3,8 @@ name: Download the file from SBI server, at 3:00 PM everyday
 
 on:
   schedule:
-    # Runs "at 15:01 every day" (see https://crontab.guru)
-    - cron: '1 15 * * *'
+    # Runs "every 12 hours" (see https://crontab.guru)
+    - cron: '1 11/12 * * *'
   workflow_dispatch:
 
 
