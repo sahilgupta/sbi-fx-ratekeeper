@@ -151,7 +151,6 @@ def dump_data(file_content, save_file=False):
 
 
 def save_pdf_file(file_content, date_time):
-
     # Construct the directory path
     dir_path = os.path.join("pdf_files", str(date_time.year), str(date_time.month))
 
@@ -181,7 +180,6 @@ def download_latest_file():
             response = s.get(
                 SBI_DAILY_RATES_URL_FALLBACK,
                 timeout=10,
-                proxies=proxies,
             )
             response.raise_for_status()
         except RequestException as e:
@@ -197,6 +195,7 @@ def download_latest_file():
 
         # Use proxies to try downloading the file again
         for x in range(5):
+            logger.info(f"Using a proxy to retry getting the PDF")
             proxy = FreeProxy(timeout=1, rand=True, elite=True, https=True).get()
             proxies = {"http": proxy}
 
