@@ -104,7 +104,7 @@ def dump_data(file_content, save_file=False):
     lines = text_page_2.split("\n")
 
     header_row = lines[0]
-    headers = ["DATE"] + [x[0] for x in re.findall(header_row_regex, header_row)]
+    headers = ["DATE", "PDF FILE"] + [x[0] for x in re.findall(header_row_regex, header_row)]
 
     new_data = None
 
@@ -128,7 +128,11 @@ def dump_data(file_content, save_file=False):
                     rows = [x for x in reader]
 
             rates = match.groups()[2:]
-            new_data = dict(zip(headers, (formatted_date_time,) + rates))
+
+            pdf_name = extracted_date_time.strftime(FILE_NAME_FORMAT) + ".pdf"
+            pdf_file_link = f'https://github.com/sahilgupta/sbi_forex_rates/blob/main/pdf_files/{str(extracted_date_time.year)}/{str(extracted_date_time.month)}/{pdf_name}'
+
+            new_data = dict(zip(headers, (formatted_date_time, pdf_file_link) + rates))
             logger.debug(f"New rates found: {new_data}")
 
             rows.append(new_data)
