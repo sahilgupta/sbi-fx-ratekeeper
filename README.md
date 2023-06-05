@@ -16,9 +16,10 @@ OR download the CSV files and use with Excel or Google Sheets
 ![Download historical SBI TTBR CSV](https://raw.githubusercontent.com/sahilgupta/sbi_forex_rates/main/images/Download%20historical%20SBI%20TTBR%20CSV.gif)
 <br/>
 
-**Note:**
-The PDF files too from SBI servers are available in the *pdf_files/* folder. The reference rates are on the 2nd page of each PDF.
+The link to the PDF file (saved from the SBI servers) is also published with each day's data to make it easy to verify. They are also available in the *pdf_files/* folder.
 
+**Note:**
+The reference rates are on the 2nd page of each PDF.
 
 ## Known Limitations
 
