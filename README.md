@@ -26,6 +26,8 @@ The reference rates are on the 2nd page of each PDF.
 - Data is only available from Jan 2020 onwards.
 - For some reason, SBI doesn't publish the rates file on all working days; no data is available for such days. You can either get the rates from [RBI Reference Rate Archive](https://www.rbi.org.in/scripts/ReferenceRateArchive.aspx), or from some third-party FX rates vendor such as [OANDA](https://www.oanda.com/fx-for-business/historical-rates).
 
+Typically, the RBI Reference rates have a 20-30 paise difference with the SBI TT Buying rates. This delta is reasonably stable over time. You can find the average difference for a few dates post 2020, take the published RBI rates and adjust them by the standard delta before using.
+
 ### Credits
 
 Credit for data prior to Dec 2022 goes to:
