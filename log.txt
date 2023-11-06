@@ -103,3 +103,6 @@ PyPDF2.errors.PdfReadError: EOF marker not found
 2023-10-05 10:34:20,942 - urllib3.connectionpool - WARNING - Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='www.sbi.co.in', port=443): Read timed out. (read timeout=10)")': /documents/16012/1400784/FOREX_CARD_RATES.pdf
 2023-11-06 10:35:31,542 - root - ERROR - No data matching the currency regex found
 NoneType: None
+2023-11-06 16:38:10,345 - urllib3.connectionpool - WARNING - Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='www.sbi.co.in', port=443): Read timed out. (read timeout=10)")': /documents/16012/1400784/FOREX_CARD_RATES.pdf
+2023-11-06 16:38:12,901 - root - ERROR - No data matching the currency regex found
+NoneType: None
