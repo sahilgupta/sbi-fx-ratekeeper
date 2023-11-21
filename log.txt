@@ -141,3 +141,7 @@ NoneType: None
 NoneType: None
 2023-11-20 16:35:08,454 - root - ERROR - No data matching the currency regex found
 NoneType: None
+2023-11-21 10:40:21,050 - urllib3.connectionpool - WARNING - Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x7f790992ad70>, 'Connection to sbi.co.in timed out. (connect timeout=10)')': /documents/16012/1400784/FOREX_CARD_RATES.pdf
+2023-11-21 10:40:37,827 - urllib3.connectionpool - WARNING - Retrying (Retry(total=3, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x7f790992ae30>, 'Connection to sbi.co.in timed out. (connect timeout=10)')': /documents/16012/1400784/FOREX_CARD_RATES.pdf
+2023-11-21 10:40:48,073 - root - ERROR - No data matching the currency regex found
+NoneType: None
