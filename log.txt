@@ -154,3 +154,5 @@ NoneType: None
 2023-11-22 10:38:14,579 - root - INFO - Found a valid PDF in 1 try. Breaking away
 2023-11-22 10:38:14,692 - root - ERROR - No data matching the currency regex found
 NoneType: None
+2023-11-22 16:37:07,077 - root - ERROR - No data matching the currency regex found
+NoneType: None
