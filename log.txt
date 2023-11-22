@@ -145,3 +145,12 @@ NoneType: None
 2023-11-21 10:40:37,827 - urllib3.connectionpool - WARNING - Retrying (Retry(total=3, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x7f790992ae30>, 'Connection to sbi.co.in timed out. (connect timeout=10)')': /documents/16012/1400784/FOREX_CARD_RATES.pdf
 2023-11-21 10:40:48,073 - root - ERROR - No data matching the currency regex found
 NoneType: None
+2023-11-22 10:36:22,613 - urllib3.connectionpool - WARNING - Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='bank.sbi', port=443): Read timed out. (read timeout=10)")': /
+2023-11-22 10:36:39,308 - urllib3.connectionpool - WARNING - Retrying (Retry(total=3, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='bank.sbi', port=443): Read timed out. (read timeout=10)")': /
+2023-11-22 10:37:02,084 - urllib3.connectionpool - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='bank.sbi', port=443): Read timed out. (read timeout=10)")': /
+2023-11-22 10:37:36,857 - urllib3.connectionpool - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='bank.sbi', port=443): Read timed out. (read timeout=10)")': /
+2023-11-22 10:37:47,533 - root - INFO - Invalid PDF. Response MIME type seems to be HTML document, ASCII text, with CRLF, LF line terminators
+2023-11-22 10:37:47,533 - root - INFO - Using a proxy to retry getting the PDF
+2023-11-22 10:38:14,579 - root - INFO - Found a valid PDF in 1 try. Breaking away
+2023-11-22 10:38:14,692 - root - ERROR - No data matching the currency regex found
+NoneType: None
