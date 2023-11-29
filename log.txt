@@ -182,3 +182,5 @@ NoneType: None
 NoneType: None
 2023-11-29 10:34:43,488 - root - ERROR - No data matching the currency regex found
 NoneType: None
+2023-11-29 16:37:58,191 - root - ERROR - No data matching the currency regex found
+NoneType: None
