@@ -212,3 +212,5 @@ NoneType: None
 2023-12-05 10:37:05,256 - urllib3.connectionpool - WARNING - Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ProtocolError('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))': /documents/16012/1400784/FOREX_CARD_RATES.pdf
 2023-12-05 10:37:12,249 - urllib3.connectionpool - WARNING - Retrying (Retry(total=3, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ProtocolError('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))': /documents/16012/1400784/FOREX_CARD_RATES.pdf
 2023-12-05 10:37:25,249 - urllib3.connectionpool - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ProtocolError('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))': /documents/16012/1400784/FOREX_CARD_RATES.pdf
+2023-12-06 10:34:36,136 - root - ERROR - No data matching the currency regex found
+NoneType: None
