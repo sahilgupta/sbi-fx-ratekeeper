@@ -230,3 +230,10 @@ NoneType: None
 NoneType: None
 2023-12-10 10:30:57,164 - root - ERROR - No data matching the currency regex found
 NoneType: None
+2023-12-10 16:34:09,455 - urllib3.connectionpool - WARNING - Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7f7113a41300>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution')': /documents/16012/1400784/FOREX_CARD_RATES.pdf
+2023-12-10 16:34:25,484 - urllib3.connectionpool - WARNING - Retrying (Retry(total=3, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7f7113a414b0>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution')': /documents/16012/1400784/FOREX_CARD_RATES.pdf
+2023-12-10 16:34:47,519 - urllib3.connectionpool - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7f7113a41750>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution')': /documents/16012/1400784/FOREX_CARD_RATES.pdf
+2023-12-10 16:35:21,544 - urllib3.connectionpool - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7f7113a41930>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution')': /documents/16012/1400784/FOREX_CARD_RATES.pdf
+2023-12-10 16:36:19,612 - urllib3.connectionpool - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7f7113a41b10>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution')': /documents/16012/1400784/FOREX_CARD_RATES.pdf
+2023-12-10 16:36:32,354 - root - ERROR - No data matching the currency regex found
+NoneType: None
