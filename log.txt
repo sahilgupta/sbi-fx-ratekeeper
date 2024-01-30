@@ -443,3 +443,5 @@ NoneType: None
 2024-01-30 10:33:06,439 - urllib3.connectionpool - WARNING - Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='www.sbi.co.in', port=443): Read timed out. (read timeout=10)")': /documents/16012/1400784/FOREX_CARD_RATES.pdf
 2024-01-30 10:33:08,799 - root - ERROR - No data matching the currency regex found
 NoneType: None
+2024-01-30 16:35:43,928 - root - ERROR - No data matching the currency regex found
+NoneType: None
