@@ -37,10 +37,19 @@ FILE_NAME_WITH_TIME_FORMAT = f"{FILE_NAME_FORMAT} %H:%M"
 
 
 # Compile the regular expression
-currency_line_regex = re.compile(
-    r"([A-Za-z ]+)\s+(\S{3})(?:/INR){0,1}\s+((?:\d{1,3}\.\d{1,2})|(?:\d{1,3}\.\d)|(?:\d{1,3}))\s+((?:\d{1,3}\.\d{1,2})|(?:\d{1,3}\.\d)|(?:\d{1,3}))\s+((?:\d{1,3}\.\d{1,2})|(?:\d{1,3}\.\d)|(?:\d{1,3}))\s+((?:\d{1,3}\.\d{1,2})|(?:\d{1,3}\.\d)|(?:\d{1,3}))\s+((?:\d{1,3}\.\d{1,2})|(?:\d{1,3}\.\d)|(?:\d{1,3}))\s+((?:\d{1,3}\.\d{1,2})|(?:\d{1,3}\.\d)|(?:\d{1,3}))\s+((?:\d{1,3}\.\d{1,2})|(?:\d{1,3}\.\d)|(?:\d{1,3}))\s+((?:\d{1,3}\.\d{1,2})|(?:\d{1,3}\.\d)|(?:\d{1,3}))\s+((?:\d{1,3}\.\d{1,2})|(?:\d{1,3}\.\d)|(?:\d{1,3}))"
-)
-header_row_regex = re.compile("(([A-Z]{2,4}) (BUY|SELL))")
+currency_line_regex = re.compile(r"([A-Z]{3})\/INR\s((?:\d+(?:\.\d+)?\s?)+)")
+HEADERS = [
+    "DATE",
+    "PDF FILE",
+    "TT BUY",
+    "TT SELL",
+    "BILL BUY",
+    "BILL SELL",
+    "FOREX TRAVEL CARD BUY",
+    "FOREX TRAVEL CARD SELL",
+    "CN BUY",
+    "CN SELL",
+]
 
 
 def extract_date_time(reader_obj):
@@ -90,10 +99,11 @@ def dump_data(file_content, save_file=False):
         return
 
     extracted_date_time = extract_date_time(reader)
-
     if not extracted_date_time:
         logger.exception("Unable to extract date and time from the PDF. Aborting.")
         return
+
+    formatted_date_time = extracted_date_time.strftime(FILE_NAME_WITH_TIME_FORMAT)
 
     logger.debug(f"Successfully parsed date and time {extracted_date_time}")
 
@@ -103,36 +113,36 @@ def dump_data(file_content, save_file=False):
     text_page_2 = reader.getPage(1).extractText()
     lines = text_page_2.split("\n")
 
-    header_row = lines[0]
-    headers = ["DATE", "PDF FILE"] + [x[0] for x in re.findall(header_row_regex, header_row)]
-
     new_data = None
 
-    for line in lines[1:]:
+    for line in lines:
         match = re.search(currency_line_regex, line)
-        if match:
-            formatted_date_time = extracted_date_time.strftime(
-                FILE_NAME_WITH_TIME_FORMAT
-            )
 
-            currency = match.groups()[1].split("/")[0]
+        if match:
+            (currency, rates_string) = match.groups()
+            rates_list = rates_string.split(" ")
+
             csv_file_path = os.path.join(
                 "csv_files", f"SBI_REFERENCE_RATES_{currency}.csv"
             )
             rows = []
+            headers = (
+                HEADERS  # Default to static column names if the file doesn't exist
+            )
 
             if os.path.exists(csv_file_path):
+                # Use the existing column names
                 with open(csv_file_path, "r", encoding="UTF8") as f_in:
                     reader = csv.DictReader(f_in)
                     headers = reader.fieldnames
-                    rows = [x for x in reader]
+                    rows = list(reader)
 
-            rates = match.groups()[2:]
-
+            # Prepare new data entry
             pdf_name = extracted_date_time.strftime(FILE_NAME_FORMAT) + ".pdf"
-            pdf_file_link = f'https://github.com/sahilgupta/sbi_forex_rates/blob/main/pdf_files/{str(extracted_date_time.year)}/{str(extracted_date_time.month)}/{pdf_name}'
-
-            new_data = dict(zip(headers, (formatted_date_time, pdf_file_link) + rates))
+            pdf_file_link = f"https://github.com/sahilgupta/sbi_forex_rates/blob/main/pdf_files/{str(extracted_date_time.year)}/{str(extracted_date_time.month)}/{pdf_name}"
+            new_data = dict(
+                zip(headers, [formatted_date_time, pdf_file_link] + rates_list)
+            )
             logger.debug(f"New rates found: {new_data}")
 
             rows.append(new_data)
@@ -144,14 +154,14 @@ def dump_data(file_content, save_file=False):
 
             with open(csv_file_path, "w", encoding="UTF8") as f_out:
                 writer = csv.DictWriter(f_out, fieldnames=headers)
-
                 writer.writeheader()
-                for row in rows_uniq:
-                    writer.writerow(row)
+                writer.writerows(rows_uniq)
 
                 logger.debug(f"Updated CSV file with {new_data}")
+
     if not new_data:
         logger.exception(f"No data matching the currency regex found")
+        raise Exception(f"No data parsed from the PDF")
 
 
 def save_pdf_file(file_content, date_time):
@@ -225,6 +235,7 @@ def parse_historical_data(save_file=True):
         glob.glob("/Users/sahilgupta/code/sbi_forex_rates/**/*.pdf", recursive=True)
     )
 
+    # file_path = "/Users/sahilgupta/code/sbi_forex_rates/pdf_files/2024/2/2024-02-09.pdf"
     for file_path in all_pdfs:
         logger.info(f"Parsing {file_path}")
         with open(file_path, "rb") as f:
