@@ -53,6 +53,9 @@ HEADERS = [
 
 
 def extract_date_time(reader_obj):
+    """
+    Extracts date and time from the first page of the PDF.
+    """
     text_page_1 = reader_obj.getPage(0).extractText()
 
     parsed_date = None
@@ -61,12 +64,11 @@ def extract_date_time(reader_obj):
     for line in text_page_1.split("\n"):
         if line.startswith("Date"):
             parsed_date = parser.parse(line, fuzzy=True, dayfirst=True).date()
-
-            # sometimes the dates are formatted in the US style, double check if there's a confusion
             parsed_date_us_style = parser.parse(line, fuzzy=True).date()
 
+            # Sometimes the dates are formatted in the US style. Double check
             if parsed_date != parsed_date_us_style:
-                # Double check the date from EXIF data, and use that one.
+                # Use the file's EXIF data to disambiguate
                 creation_date = reader_obj.metadata.creation_date.date()
 
                 if (
@@ -80,6 +82,7 @@ def extract_date_time(reader_obj):
         elif line.startswith("Time"):
             parsed_time = parser.parse(line, fuzzy=True).time()
 
+    # Return None if either date or time was not found
     if not parsed_date or not parsed_time:
         return None
 
@@ -89,6 +92,9 @@ def extract_date_time(reader_obj):
 
 
 def dump_data(file_content, save_file=False):
+    """
+    Reads the PDF content, extracts the data and saves it to a CSV file.
+    """
     try:
         reader = PyPDF2.PdfReader(file_content, strict=False)
     except PyPDF2.errors.PdfReadError:
@@ -126,9 +132,9 @@ def dump_data(file_content, save_file=False):
 
     new_data = None
 
+    # Iterate over lines to find currency rates
     for line in lines:
         match = re.search(currency_line_regex, line)
-
         if match:
             (currency, rates_string) = match.groups()
             rates_list = rates_string.split(" ")
@@ -141,8 +147,8 @@ def dump_data(file_content, save_file=False):
                 HEADERS  # Default to static column names if the file doesn't exist
             )
 
+            # If file exists, use the existing column names
             if os.path.exists(csv_file_path):
-                # Use the existing column names
                 with open(csv_file_path, "r", encoding="UTF8") as f_in:
                     reader = csv.DictReader(f_in)
                     headers = reader.fieldnames
