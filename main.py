@@ -110,8 +110,19 @@ def dump_data(file_content, save_file=False):
     if save_file:
         save_pdf_file(file_content, extracted_date_time)
 
+    text_page_1 = reader.getPage(0).extractText()
     text_page_2 = reader.getPage(1).extractText()
-    lines = text_page_2.split("\n")
+
+    # SBI used to print the reference rates on Page #2 but now
+    # does on Page #1. Figure out which page has the reference rates before further processing.
+    if "to be used as reference rates" in text_page_1.lower():
+        reference_page = text_page_1
+    elif "to be used as reference rates" in text_page_2.lower():
+        reference_page = text_page_2
+    else:
+        raise Exception(f"Text about reference rates not found on either page.")
+
+    lines = reference_page.split("\n")
 
     new_data = None
 
