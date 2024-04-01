@@ -1,6 +1,7 @@
 PyPDF2==2.12.1
 python_dateutil==2.8.2
 requests==2.31.0
+lxml_html_clean==0.1.0
 requests-html==0.10.0
 python-magic==0.4.27
 free-proxy==1.1.1
