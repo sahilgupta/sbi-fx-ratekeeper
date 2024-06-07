@@ -16,10 +16,11 @@ OR download the CSV files and use with Excel or Google Sheets
 ![Download historical SBI TTBR CSV](https://raw.githubusercontent.com/sahilgupta/sbi_forex_rates/main/images/Download%20historical%20SBI%20TTBR%20CSV.gif)
 <br/>
 
-The link to the PDF file (saved from the SBI servers) is also published with each day's data to make it easy to verify. They are also available in the *pdf_files/* folder.
+The PDFs (saved from the SBI servers) are available in the *pdf_files/* folder. Direct link to each day's PDF is also published along with the data for quick verification. 
 
 **Note:**
-The reference rates are on the 2nd page of each PDF.
+The SBI explicitly mentions that only the rates published for ₹10-20 lakh transaction range are to be considered as reference rates.
+The reference rates do NOT change based on your transaction value, which could be ₹100 or ₹1 Cr.
 
 ## Known Limitations
 
