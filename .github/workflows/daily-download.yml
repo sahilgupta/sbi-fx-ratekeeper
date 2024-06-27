@@ -12,9 +12,9 @@ jobs:
   build:
 
     name: Download Rates FILE
-    
+
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v3
 
@@ -44,6 +44,8 @@ jobs:
         pip install -r requirements.txt
 
     - name: Download and save file
+      env:
+        ANTHROPIC_API_KEY: ${{ secrets.anthropic_api_key }}
       run: python main.py
 
     - name: Get current time

@@ -3,20 +3,33 @@ import glob
 import io
 import logging
 import os
-import os.path
-import re
 from datetime import datetime
-from urllib3.util.retry import Retry
+from typing import Dict, List, Tuple
+import base64
+import json
 
+import anthropic
 import magic
-from fp.fp import FreeProxy
 import PyPDF2
 import requests
-from requests_html import HTMLSession
-from requests.exceptions import RequestException
 from dateutil import parser
+from fp.fp import FreeProxy
+from requests.adapters import HTTPAdapter
+from pdf2image import convert_from_bytes
+from requests_html import HTMLSession
+from urllib3.util.retry import Retry
 
-logger = logging.getLogger()
+# Constants
+SBI_DAILY_RATES_URL = "https://www.sbi.co.in/documents/16012/1400784/FOREX_CARD_RATES.pdf"
+SBI_DAILY_RATES_URL_FALLBACK = "https://bank.sbi/documents/16012/1400784/FOREX_CARD_RATES.pdf"
+FILE_NAME_FORMAT = "%Y-%m-%d"
+FILE_NAME_WITH_TIME_FORMAT = f"{FILE_NAME_FORMAT} %H:%M"
+TABLE_COLUMNS = ["TT BUY", "TT SELL", "BILL BUY", "BILL SELL",
+                "FOREX TRAVEL CARD BUY", "FOREX TRAVEL CARD SELL", "CN BUY", "CN SELL"]
+HEADERS = ["DATE", "PDF FILE"] + TABLE_COLUMNS
+
+# Setup logging
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 file_handler = logging.FileHandler("log.txt")
 file_handler.setLevel(logging.INFO)
@@ -24,248 +37,252 @@ formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(messag
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
+class DateExtractionError(Exception):
+    """Raised when date extraction fails"""
+    pass
 
-SBI_DAILY_RATES_URL = (
-    "https://www.sbi.co.in/documents/16012/1400784/FOREX_CARD_RATES.pdf"
-)
-SBI_DAILY_RATES_URL_FALLBACK = (
-    "https://bank.sbi/documents/16012/1400784/FOREX_CARD_RATES.pdf"
-)
-
-FILE_NAME_FORMAT = "%Y-%m-%d"
-FILE_NAME_WITH_TIME_FORMAT = f"{FILE_NAME_FORMAT} %H:%M"
-
-
-# Compile the regular expression
-currency_line_regex = re.compile(r"([A-Z]{3})\/INR\s((?:\d+(?:\.\d+)?\s?)+)")
-HEADERS = [
-    "DATE",
-    "PDF FILE",
-    "TT BUY",
-    "TT SELL",
-    "BILL BUY",
-    "BILL SELL",
-    "FOREX TRAVEL CARD BUY",
-    "FOREX TRAVEL CARD SELL",
-    "CN BUY",
-    "CN SELL",
-]
-
-
-def extract_date_time(reader_obj):
+def extract_date_time(text: str, file_creation_date: datetime = None) -> datetime:
     """
-    Extracts date and time from the first page of the PDF.
+    Extracts date and time from the given text.
+    Uses file creation date to disambiguate if provided.
+    Raises DateExtractionError if date and time cannot be extracted.
     """
-    text_page_1 = reader_obj.getPage(0).extractText()
-
     parsed_date = None
     parsed_time = None
 
-    for line in text_page_1.split("\n"):
+    for line in text.split("\n"):
         if line.startswith("Date"):
-            parsed_date = parser.parse(line, fuzzy=True, dayfirst=True).date()
-            parsed_date_us_style = parser.parse(line, fuzzy=True).date()
-
-            # Sometimes the dates are formatted in the US style. Double check
-            if parsed_date != parsed_date_us_style:
-                # Use the file's EXIF data to disambiguate
-                creation_date = reader_obj.metadata.creation_date.date()
-
-                if (
-                    creation_date == parsed_date
-                    or creation_date == parsed_date_us_style
-                ):
-                    parsed_date = creation_date
-                else:
-                    raise Exception(f"None of the date formats seem to match. {line}")
-
+            try:
+                parsed_date = parse_date(line, file_creation_date)
+            except ValueError as e:
+                logger.warning(f"Failed to parse date: {e}")
         elif line.startswith("Time"):
-            parsed_time = parser.parse(line, fuzzy=True).time()
+            try:
+                parsed_time = parser.parse(line, fuzzy=True).time()
+            except ValueError as e:
+                logger.warning(f"Failed to parse time: {e}")
 
-    # Return None if either date or time was not found
-    if not parsed_date or not parsed_time:
-        return None
+    if parsed_date is None or parsed_time is None:
+        raise DateExtractionError("Date or time not found in the text")
 
-    parsed_datetime = datetime.combine(parsed_date, parsed_time)
+    return datetime.combine(parsed_date, parsed_time)
 
-    return parsed_datetime
-
-
-def dump_data(file_content, save_file=False):
+def parse_date(date_line: str, file_creation_date: datetime = None) -> datetime.date:
     """
-    Reads the PDF content, extracts the data and saves it to a CSV file.
+    Parses the date from a given line, handling different formats.
+    Uses file creation date to disambiguate if provided.
+    Raises ValueError if the date cannot be parsed.
     """
     try:
+        parsed_date = parser.parse(date_line, fuzzy=True, dayfirst=True).date()
+        parsed_date_us_style = parser.parse(date_line, fuzzy=True).date()
+
+        if parsed_date != parsed_date_us_style:
+            if file_creation_date and file_creation_date.date() in (parsed_date, parsed_date_us_style):
+                return file_creation_date.date()
+            logger.warning(f"Ambiguous date format: {date_line}. Using day-first format.")
+        return parsed_date
+    except Exception as e:
+        raise ValueError(f"Failed to parse date from '{date_line}': {e}")
+
+
+def extract_currency_rates(text: str) -> List[Dict[str, List[str]]]:
+    """Extracts currency rates from the given text."""
+    import re
+    currency_line_regex = re.compile(r"([A-Z]{3})\/INR\s((?:\d+(?:\.\d+)?\s?)+)")
+    rates = []
+
+    for line in text.split("\n"):
+        match = re.search(currency_line_regex, line)
+        if match:
+            currency, rates_string = match.groups()
+            rates.append({
+                "currency_code": currency,
+                "rates": rates_string.split()
+            })
+
+    return rates
+
+def save_to_csv(rates_data: List[Dict[str, List[str]]], date_time: datetime) -> None:
+    """Saves the rates data to the corresponding CSV files."""
+    pdf_name = date_time.strftime(FILE_NAME_FORMAT) + ".pdf"
+    pdf_file_link = f"https://github.com/sahilgupta/sbi-fx-ratekeeper/blob/main/pdf_files/{date_time.year}/{date_time.month}/{pdf_name}"
+    formatted_date_time = date_time.strftime(FILE_NAME_WITH_TIME_FORMAT)
+
+    for row in rates_data:
+        currency = row['currency_code']
+        new_data = dict(zip(HEADERS, [formatted_date_time, pdf_file_link] + row["rates"]))
+
+        csv_file_path = os.path.join("csv_files", f"SBI_REFERENCE_RATES_{currency}.csv")
+        csv_rows = []
+
+        if os.path.exists(csv_file_path):
+            with open(csv_file_path, "r", encoding="UTF8") as f_in:
+                reader = csv.DictReader(f_in)
+                csv_rows = list(reader)
+
+        csv_rows.append(new_data)
+        rows_uniq = list({v["DATE"]: v for v in csv_rows}.values())
+        rows_uniq.sort(key=lambda x: datetime.strptime(x["DATE"], FILE_NAME_WITH_TIME_FORMAT))
+
+        with open(csv_file_path, "w", encoding="UTF8") as f_out:
+            writer = csv.DictWriter(f_out, fieldnames=HEADERS)
+            writer.writeheader()
+            writer.writerows(rows_uniq)
+
+def save_pdf_file(file_content: io.BytesIO, date_time: datetime) -> None:
+    """Saves the PDF file to the appropriate directory."""
+    dir_path = os.path.join("pdf_files", str(date_time.year), str(date_time.month))
+    os.makedirs(dir_path, exist_ok=True)
+
+    pdf_name = date_time.strftime(FILE_NAME_FORMAT) + ".pdf"
+    file_path = os.path.join(dir_path, pdf_name)
+
+    with open(file_path, "wb") as f:
+        file_content.seek(0)
+        f.write(file_content.getbuffer())
+
+def download_pdf(url: str, session: HTMLSession, use_proxy: bool = False) -> requests.Response:
+    """Downloads the PDF from the given URL, optionally using a proxy."""
+    if use_proxy:
+        proxy = FreeProxy(timeout=1, rand=True, elite=True, https=True).get()
+        proxies = {"http": proxy, "https": proxy}
+        return session.get(url, timeout=10, proxies=proxies)
+    return session.get(url, timeout=10)
+
+def get_latest_pdf_from_sbi() -> io.BytesIO:
+    """Attempts to download a valid PDF, using fallback URL and proxies if necessary."""
+    session = HTMLSession()
+    retries = Retry(total=5, backoff_factor=3, status_forcelist=[500, 502, 503, 504])
+    session.mount("https://", HTTPAdapter(max_retries=retries))
+
+    urls = [SBI_DAILY_RATES_URL, SBI_DAILY_RATES_URL_FALLBACK]
+    for url in urls:
+        try:
+            response = download_pdf(url, session)
+            response.raise_for_status()
+            if magic.from_buffer(response.content[:128]).startswith("PDF document"):
+                return io.BytesIO(response.content)
+        except requests.RequestException:
+            logger.exception(f"Failed to download PDF from {url}")
+
+    # If we're here, we couldn't get a valid PDF from the main URLs. Try with proxies.
+    for _ in range(5):
+        try:
+            response = download_pdf(SBI_DAILY_RATES_URL, session, use_proxy=True)
+            response.raise_for_status()
+            if magic.from_buffer(response.content[:128]).startswith("PDF document"):
+                return io.BytesIO(response.content)
+        except requests.RequestException:
+            logger.exception("Failed to download PDF using proxy")
+
+    raise Exception("Unable to retrieve a valid PDF")
+
+
+def process_as_image(file_content: io.BytesIO) -> Tuple[datetime, List[Dict[str, List[str]]]]:
+    # Convert the PDF to a list of images, one for each page
+    pages_images = convert_from_bytes(file_content.getvalue(), dpi=500, size=2000)
+
+    api_key = os.environ['ANTHROPIC_API_KEY']
+
+    client = anthropic.Anthropic(api_key=api_key)
+
+    for page in pages_images:
+        # Convert image to bytes
+        buffered = io.BytesIO()
+        page.save(buffered, format="JPEG")
+        image_bytes = buffered.getvalue()
+
+        # Encode bytes to base64
+        image_base64 = base64.b64encode(image_bytes).decode("utf-8")
+
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": "image/jpeg",
+                            "data": image_base64
+                        },
+                    },
+                    {
+                        "type": "text",
+                        "text": "Analyze this image. Check whether it contains the text \"be used as reference rates\". Parse out the 3-letter ISO currency code from the second column. For instance `USD` from `USD/INR`. Provide a JSON response like the following structure:[\"has_reference_rates\": true or false, \"headers\": [<list of column headers>], \"date\": \"<date as DD-MM-YYYY>\", \"time\": \"<time of publishing in HH:MM AM/PM format>\", \"forex_rates\": [{\"currency_code\": \"<currency short code>\"\",\"rates\": [83.57, 84.42, 83.50, 84.59, 83.50, 84.59, 82.55, 84.90}]"
+                    }
+                ]
+            }
+        ]
+
+        response = client.messages.create(
+            model="claude-3-haiku-20240307",
+            max_tokens=4096,
+            messages=messages
+        )
+
+        response_json = json.loads(response.content[0].text)
+        if response_json.get('has_reference_rates'):
+            if response_json.get("headers")[1:] == TABLE_COLUMNS:
+                date_str = response_json['date']
+                time_str = response_json['time']
+
+                # Use the extract_date_time function for consistency
+                date_time_str = f"Date: {date_str}\nTime: {time_str}"
+                extracted_date_time = extract_date_time(date_time_str)
+
+                # Likely the 1st page itself contains the reference rates. If yes, the loop will terminate returning the data
+                return extracted_date_time, response_json["forex_rates"]
+
+    raise ValueError("Unable to extract reference rates from images")
+
+def process_content(file_content: io.BytesIO, save_file: bool = False) -> None:
+    """Processes the content, extracting data and saving to CSV."""
+    try:
         reader = PyPDF2.PdfReader(file_content, strict=False)
-    except PyPDF2.errors.PdfReadError:
-        logger.exception("")
-        return
-    except ValueError:
-        logger.exception("")
-        return
+        text = reader.pages[0].extract_text()
+        file_creation_date = reader.metadata.creation_date if reader.metadata else None
+        extracted_date_time = extract_date_time(text, file_creation_date)
+        reference_page = next((page.extract_text() for page in reader.pages[:2]
+                               if "to be used as reference rates" in page.extract_text().lower()),
+                              None)
+        if not reference_page:
+            raise ValueError("Text about reference rates not found on either page.")
 
-    extracted_date_time = extract_date_time(reader)
-    if not extracted_date_time:
-        logger.exception("Unable to extract date and time from the PDF. Aborting.")
-        return
+        # Sometimes the spacing in the parsed text is incorrect.
+        # Ensure there's a space to be able to split the currency code from the rates.
+        # Avoids using a regex, and works quite well in practice.
+        reference_page = reference_page.replace('/INR', '/INR ')
+        rates_data = extract_currency_rates(reference_page)
+    except Exception as e:
+        logger.warning(f"Failed to process PDF: {e}. Attempting to process as image.")
+        extracted_date_time, rates_data = process_as_image(file_content)
 
-    formatted_date_time = extracted_date_time.strftime(FILE_NAME_WITH_TIME_FORMAT)
+        if not rates_data:
+            raise ValueError("No rates found.")
 
-    logger.debug(f"Successfully parsed date and time {extracted_date_time}")
+    logger.debug(f"Successfully parsed date time {extracted_date_time} and the rates.")
 
     if save_file:
         save_pdf_file(file_content, extracted_date_time)
 
-    text_page_1 = reader.getPage(0).extractText()
-    text_page_2 = reader.getPage(1).extractText()
-
-    # SBI used to print the reference rates on Page #2 but now
-    # does on Page #1. Figure out which page has the reference rates before further processing.
-    if "to be used as reference rates" in text_page_1.lower():
-        reference_page = text_page_1
-    elif "to be used as reference rates" in text_page_2.lower():
-        reference_page = text_page_2
-    else:
-        raise Exception(f"Text about reference rates not found on either page.")
-
-    lines = reference_page.split("\n")
-
-    new_data = None
-
-    # Iterate over lines to find currency rates
-    for line in lines:
-        match = re.search(currency_line_regex, line)
-        if match:
-            (currency, rates_string) = match.groups()
-            rates_list = rates_string.split(" ")
-
-            csv_file_path = os.path.join(
-                "csv_files", f"SBI_REFERENCE_RATES_{currency}.csv"
-            )
-            rows = []
-            headers = (
-                HEADERS  # Default to static column names if the file doesn't exist
-            )
-
-            # If file exists, use the existing column names
-            if os.path.exists(csv_file_path):
-                with open(csv_file_path, "r", encoding="UTF8") as f_in:
-                    reader = csv.DictReader(f_in)
-                    headers = reader.fieldnames
-                    rows = list(reader)
-
-            # Prepare new data entry
-            pdf_name = extracted_date_time.strftime(FILE_NAME_FORMAT) + ".pdf"
-            pdf_file_link = f"https://github.com/sahilgupta/sbi-fx-ratekeeper/blob/main/pdf_files/{str(extracted_date_time.year)}/{str(extracted_date_time.month)}/{pdf_name}"
-            new_data = dict(
-                zip(headers, [formatted_date_time, pdf_file_link] + rates_list)
-            )
-            logger.debug(f"New rates found: {new_data}")
-
-            rows.append(new_data)
-            rows_uniq = list({v["DATE"]: v for v in rows}.values())
-
-            rows_uniq.sort(
-                key=lambda x: datetime.strptime(x["DATE"], FILE_NAME_WITH_TIME_FORMAT)
-            )
-
-            with open(csv_file_path, "w", encoding="UTF8") as f_out:
-                writer = csv.DictWriter(f_out, fieldnames=headers)
-                writer.writeheader()
-                writer.writerows(rows_uniq)
-
-                logger.debug(f"Updated CSV file with {new_data}")
-
-    if not new_data:
-        logger.exception(f"No data matching the currency regex found")
-        raise Exception(f"No data parsed from the PDF")
+    save_to_csv(rates_data, extracted_date_time)
 
 
-def save_pdf_file(file_content, date_time):
-    # Construct the directory path
-    dir_path = os.path.join("pdf_files", str(date_time.year), str(date_time.month))
-
-    # Create the directory if it doesn't exist
-    if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
-
-    pdf_name = date_time.strftime(FILE_NAME_FORMAT) + ".pdf"
-
-    # Write to a file in the new directory
-    with open(os.path.join(dir_path, pdf_name), "wb") as f:
-        file_content.seek(0)
-        f.write(file_content.getbuffer())
-
-
-def download_latest_file():
-    s = HTMLSession()
-
-    retries = Retry(total=5, backoff_factor=3, status_forcelist=[500, 502, 503, 504])
-    s.mount("https://", requests.adapters.HTTPAdapter(max_retries=retries))
-
-    try:
-        response = s.get(SBI_DAILY_RATES_URL, timeout=10)
-        response.raise_for_status()
-    except RequestException as e:
-        try:
-            response = s.get(
-                SBI_DAILY_RATES_URL_FALLBACK,
-                timeout=10,
-            )
-            response.raise_for_status()
-        except RequestException as e:
-            raise Exception(
-                "Unable to retrieve PDF from both the URLs. Error: " + str(e)
-            )
-
-    # Check the MIME type since the response may be HTML, even with status code 200
-    mime_type = magic.from_buffer(response.content[:128])
-
-    if not mime_type.startswith("PDF document"):
-        logger.info(f"Invalid PDF. Response MIME type seems to be {mime_type}")
-
-        # Use proxies to try downloading the file again
-        for x in range(5):
-            logger.info(f"Using a proxy to retry getting the PDF")
-            proxy = FreeProxy(timeout=1, rand=True, elite=True, https=True).get()
-            proxies = {"http": proxy}
-
-            response = s.get(SBI_DAILY_RATES_URL, timeout=10, proxies=proxies)
-            response.raise_for_status()
-
-            mime_type = magic.from_buffer(response.content[:128])
-            if mime_type.startswith("PDF document"):
-                logger.info(f"Found a valid PDF in {x+1} try. Breaking away")
-                break
-        else:
-            raise Exception("Was not able to get a valid PDF. Aborting...")
-
-    bytestream = io.BytesIO(response.content)
-    save_pdf_file(bytestream, date_time=datetime.now())
-
-    # Need to convert to a byte stream for PDF parser to be able to seek to different address
-    return io.BytesIO(response.content)
-
-
-def parse_historical_data(save_file=True):
-    all_pdfs = sorted(
-        glob.glob("/Users/sahilgupta/code/sbi_forex_rates/**/*.pdf", recursive=True)
-    )
-
-    # file_path = "/Users/sahilgupta/code/sbi_forex_rates/pdf_files/2024/2/2024-02-09.pdf"
+def parse_historical_data(directory: str, save_file: bool = True) -> None:
+    """Parses historical PDF files in the given directory."""
+    all_pdfs = sorted(glob.glob(os.path.join(directory, "**/*.pdf"), recursive=True))
     for file_path in all_pdfs:
         logger.info(f"Parsing {file_path}")
         with open(file_path, "rb") as f:
-            # Need to convert to a byte stream for PDF parser to be able to seek to different address
-            bytestream = io.BytesIO(f.read())
-
+            file_content = io.BytesIO(f.read())
             try:
-                dump_data(bytestream, save_file)
-            except:
-                logger.exception(f"Ran into error for {file_path}")
-
+                process_content(file_content, save_file)
+            except Exception:
+                logger.exception(f"Error processing {file_path}")
 
 if __name__ == "__main__":
-    # parse_historical_data(save_file=False)
-    file_content = download_latest_file()
-    dump_data(file_content)
+    # parse_historical_data("/Users/sahilgupta/code/sbi_forex_rates/pdf_files/2024", save_file=False)
+    file_content = get_latest_pdf_from_sbi()
+    process_content(file_content, save_file=True)
