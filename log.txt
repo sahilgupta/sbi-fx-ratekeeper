@@ -542,3 +542,5 @@ NoneType: None
 2024-09-01 10:35:22,501 - urllib3.connectionpool - WARNING - Retrying (Retry(total=3, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7f26a7641600>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution')': /documents/16012/1400784/FOREX_CARD_RATES.pdf
 2024-09-06 10:37:15,946 - root - ERROR - Unable to extract date and time from the PDF. Aborting.
 NoneType: None
+2024-09-06 16:42:17,275 - root - ERROR - Unable to extract date and time from the PDF. Aborting.
+NoneType: None
