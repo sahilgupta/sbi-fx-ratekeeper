@@ -5,3 +5,5 @@ lxml_html_clean==0.1.0
 requests-html==0.10.0
 python-magic==0.4.27
 free-proxy==1.1.1
+poppler-utils
+pdf2image

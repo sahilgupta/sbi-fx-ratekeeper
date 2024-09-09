@@ -28,11 +28,16 @@ jobs:
       run: |
         sudo apt-get install -y libmagic1
 
+      # poppler is used to convert pdf to images
+    - name: Install poppler
+      run: |
+        sudo apt-get install -y poppler-utils
+
     - name: Create and start virtual environment
       run: |
         python3 -m venv venv
         source venv/bin/activate
-    
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
