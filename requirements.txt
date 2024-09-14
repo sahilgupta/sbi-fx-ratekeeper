@@ -7,3 +7,4 @@ python-magic==0.4.27
 free-proxy==1.1.1
 poppler-utils
 pdf2image
+anthropic==0.34.2
