@@ -552,3 +552,39 @@ NoneType: None
 NoneType: None
 2024-09-08 16:39:14,888 - root - ERROR - Unable to extract date and time from the PDF. Aborting.
 NoneType: None
+2024-09-18 10:40:07,774 - __main__ - ERROR - Failed to download PDF from https://www.sbi.co.in/documents/16012/1400784/FOREX_CARD_RATES.pdf
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.10.14/x64/lib/python3.10/site-packages/requests/adapters.py", line 564, in send
+    resp = conn.urlopen(
+  File "/opt/hostedtoolcache/Python/3.10.14/x64/lib/python3.10/site-packages/urllib3/connectionpool.py", line 830, in urlopen
+    return self.urlopen(
+  File "/opt/hostedtoolcache/Python/3.10.14/x64/lib/python3.10/site-packages/urllib3/connectionpool.py", line 897, in urlopen
+    return self.urlopen(
+  File "/opt/hostedtoolcache/Python/3.10.14/x64/lib/python3.10/site-packages/urllib3/connectionpool.py", line 897, in urlopen
+    return self.urlopen(
+  File "/opt/hostedtoolcache/Python/3.10.14/x64/lib/python3.10/site-packages/urllib3/connectionpool.py", line 897, in urlopen
+    return self.urlopen(
+  File "/opt/hostedtoolcache/Python/3.10.14/x64/lib/python3.10/site-packages/urllib3/connectionpool.py", line 830, in urlopen
+    return self.urlopen(
+  File "/opt/hostedtoolcache/Python/3.10.14/x64/lib/python3.10/site-packages/urllib3/connectionpool.py", line 887, in urlopen
+    retries = retries.increment(method, url, response=response, _pool=self)
+  File "/opt/hostedtoolcache/Python/3.10.14/x64/lib/python3.10/site-packages/urllib3/util/retry.py", line 594, in increment
+    raise MaxRetryError(_pool, url, error or ResponseError(cause))
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='www.sbi.co.in', port=443): Max retries exceeded with url: /documents/16012/1400784/FOREX_CARD_RATES.pdf (Caused by ResponseError('too many 503 error responses'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/runner/work/sbi-fx-ratekeeper/sbi-fx-ratekeeper/main.py", line 191, in get_latest_pdf_from_sbi
+    response = download_pdf(url, session)
+  File "/home/runner/work/sbi-fx-ratekeeper/sbi-fx-ratekeeper/main.py", line 181, in download_pdf
+    return session.get(url, timeout=10)
+  File "/opt/hostedtoolcache/Python/3.10.14/x64/lib/python3.10/site-packages/requests/sessions.py", line 602, in get
+    return self.request("GET", url, **kwargs)
+  File "/opt/hostedtoolcache/Python/3.10.14/x64/lib/python3.10/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/opt/hostedtoolcache/Python/3.10.14/x64/lib/python3.10/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "/opt/hostedtoolcache/Python/3.10.14/x64/lib/python3.10/site-packages/requests/adapters.py", line 588, in send
+    raise RetryError(e, request=request)
+requests.exceptions.RetryError: HTTPSConnectionPool(host='www.sbi.co.in', port=443): Max retries exceeded with url: /documents/16012/1400784/FOREX_CARD_RATES.pdf (Caused by ResponseError('too many 503 error responses'))
