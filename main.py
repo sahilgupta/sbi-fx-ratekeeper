@@ -197,13 +197,15 @@ def get_latest_pdf_from_sbi() -> io.BytesIO:
 
     # If we're here, we couldn't get a valid PDF from the main URLs. Try with proxies.
     for _ in range(5):
+        logger.info("Failed to download PDFs directly. Attempting with proxies...")
+
         try:
             response = download_pdf(SBI_DAILY_RATES_URL, session, use_proxy=True)
             response.raise_for_status()
             if magic.from_buffer(response.content[:128]).startswith("PDF document"):
                 return io.BytesIO(response.content)
         except requests.RequestException:
-            logger.exception("Failed to download PDF using proxy")
+            logger.info("Failed to download PDF using proxy")
 
     raise Exception("Unable to retrieve a valid PDF")
 
