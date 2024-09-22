@@ -20,13 +20,23 @@ from requests_html import HTMLSession
 from urllib3.util.retry import Retry
 
 # Constants
-SBI_DAILY_RATES_URL = "https://www.sbi.co.in/documents/16012/1400784/FOREX_CARD_RATES.pdf"
-SBI_DAILY_RATES_URL_FALLBACK = "https://bank.sbi/documents/16012/1400784/FOREX_CARD_RATES.pdf"
+SBI_DAILY_RATES_URL = (
+    "https://www.sbi.co.in/documents/16012/1400784/FOREX_CARD_RATES.pdf"
+)
+SBI_DAILY_RATES_URL_FALLBACK = (
+    "https://bank.sbi/documents/16012/1400784/FOREX_CARD_RATES.pdf"
+)
 FILE_NAME_FORMAT = "%Y-%m-%d"
 FILE_NAME_WITH_TIME_FORMAT = f"{FILE_NAME_FORMAT} %H:%M"
 TABLE_COLUMNS = [
-    "TT BUY", "TT SELL", "BILL BUY", "BILL SELL",
-    "FOREX TRAVEL CARD BUY", "FOREX TRAVEL CARD SELL", "CN BUY", "CN SELL"
+    "TT BUY",
+    "TT SELL",
+    "BILL BUY",
+    "BILL SELL",
+    "FOREX TRAVEL CARD BUY",
+    "FOREX TRAVEL CARD SELL",
+    "CN BUY",
+    "CN SELL",
 ]
 HEADERS = ["DATE", "PDF FILE"] + TABLE_COLUMNS
 
@@ -51,13 +61,22 @@ def setup_session() -> HTMLSession:
 class DateTimeExtractionError(Exception):
     pass
 
-def extract_date_time(text: str, file_creation_date: Optional[datetime] = None) -> datetime:
+
+def extract_date_time(
+    text: str, file_creation_date: Optional[datetime] = None
+) -> datetime:
     """
     Extract date and time from the given text.
     Use file creation date to disambiguate if provided.
     """
-    date_line = next((line for line in text.split('\n') if line.strip().lower().startswith('date')), None)
-    time_line = next((line for line in text.split('\n') if line.strip().lower().startswith('time')), None)
+    date_line = next(
+        (line for line in text.split("\n") if line.strip().lower().startswith("date")),
+        None,
+    )
+    time_line = next(
+        (line for line in text.split("\n") if line.strip().lower().startswith("time")),
+        None,
+    )
 
     if not date_line or not time_line:
         raise DateTimeExtractionError("Date or time not found in the text")
@@ -78,14 +97,20 @@ def parse_date(date_line: str, file_creation_date: Optional[datetime] = None) ->
         parsed_date_us_style = parser.parse(date_line, fuzzy=True).date()
 
         if parsed_date != parsed_date_us_style:
-            logger.warning(f"Ambiguous date found: {date_line}. Using file creation date as tie-breaker.")
-            if file_creation_date and file_creation_date.date() in (parsed_date, parsed_date_us_style):
+            logger.warning(
+                f"Ambiguous date found: {date_line}. Using file creation date as tie-breaker."
+            )
+            if file_creation_date and file_creation_date.date() in (
+                parsed_date,
+                parsed_date_us_style,
+            ):
                 return file_creation_date.date()
             raise DateTimeExtractionError("Unable to parse date with confidence.")
 
         return parsed_date
     except Exception as e:
         raise ValueError(f"Failed to parse date from '{date_line}': {e}")
+
 
 def parse_time(time_line: str) -> datetime.time:
     """
@@ -112,10 +137,9 @@ def extract_currency_rates(text: str) -> List[Dict[str, List[str]]]:
         match = re.search(currency_line_regex, line)
         if match:
             currency, rates_string = match.groups()
-            rates.append({
-                "currency_code": currency,
-                "rates": rates_string.strip().split()
-            })
+            rates.append(
+                {"currency_code": currency, "rates": rates_string.strip().split()}
+            )
 
     return rates
 
@@ -123,7 +147,7 @@ def extract_currency_rates(text: str) -> List[Dict[str, List[str]]]:
 def save_to_csv(
     rates_data: List[Dict[str, List[str]]],
     date_time: datetime,
-    output_dir: Optional[str] = None
+    output_dir: Optional[str] = None,
 ) -> None:
     """Save the rates data to the corresponding CSV files."""
     pdf_name = date_time.strftime(FILE_NAME_FORMAT) + ".pdf"
@@ -134,8 +158,10 @@ def save_to_csv(
     os.makedirs(output_dir, exist_ok=True)
 
     for row in rates_data:
-        currency = row['currency_code']
-        new_data = dict(zip(HEADERS, [formatted_date_time, pdf_file_link] + row["rates"]))
+        currency = row["currency_code"]
+        new_data = dict(
+            zip(HEADERS, [formatted_date_time, pdf_file_link] + row["rates"])
+        )
 
         csv_file_path = os.path.join(output_dir, f"SBI_REFERENCE_RATES_{currency}.csv")
         csv_rows = []
@@ -147,20 +173,22 @@ def save_to_csv(
 
         csv_rows.append(new_data)
         rows_uniq = list({v["DATE"]: v for v in csv_rows}.values())
-        rows_uniq.sort(key=lambda x: datetime.strptime(x["DATE"], FILE_NAME_WITH_TIME_FORMAT))
+        rows_uniq.sort(
+            key=lambda x: datetime.strptime(x["DATE"], FILE_NAME_WITH_TIME_FORMAT)
+        )
 
-        with open(csv_file_path, "w", encoding="UTF8", newline='') as f_out:
+        with open(csv_file_path, "w", encoding="UTF8", newline="") as f_out:
             writer = csv.DictWriter(f_out, fieldnames=HEADERS)
             writer.writeheader()
             writer.writerows(rows_uniq)
 
 
-def save_pdf_file(file_content: io.BytesIO, date_time: datetime, output_dir: Optional[str] = None) -> None:
+def save_pdf_file(
+    file_content: io.BytesIO, date_time: datetime, output_dir: Optional[str] = None
+) -> None:
     """Save the PDF file to the appropriate directory."""
     dir_path = os.path.join(
-        output_dir or "pdf_files",
-        str(date_time.year),
-        str(date_time.month)
+        output_dir or "pdf_files", str(date_time.year), str(date_time.month)
     )
     os.makedirs(dir_path, exist_ok=True)
 
@@ -172,7 +200,9 @@ def save_pdf_file(file_content: io.BytesIO, date_time: datetime, output_dir: Opt
         f.write(file_content.getbuffer())
 
 
-def download_pdf(url: str, session: HTMLSession, use_proxy: bool = False) -> requests.Response:
+def download_pdf(
+    url: str, session: HTMLSession, use_proxy: bool = False
+) -> requests.Response:
     """Download the PDF from the given URL, optionally using a proxy."""
     if use_proxy:
         proxy = FreeProxy(timeout=1, rand=True, elite=True, https=True).get()
@@ -210,11 +240,13 @@ def get_latest_pdf_from_sbi() -> io.BytesIO:
     raise Exception("Unable to retrieve a valid PDF")
 
 
-def process_as_image(file_content: io.BytesIO) -> Tuple[datetime, List[Dict[str, List[str]]]]:
+def process_as_image(
+    file_content: io.BytesIO,
+) -> Tuple[datetime, List[Dict[str, List[str]]]]:
     """Process the PDF as an image when text extraction fails."""
     pages_images = convert_from_bytes(file_content.getvalue(), dpi=500, size=2000)
 
-    api_key = os.environ.get('ANTHROPIC_API_KEY')
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
         raise EnvironmentError("ANTHROPIC_API_KEY not set in environment variables.")
     client = anthropic.Anthropic(api_key=api_key)
@@ -233,28 +265,26 @@ def process_as_image(file_content: io.BytesIO) -> Tuple[datetime, List[Dict[str,
                         "source": {
                             "type": "base64",
                             "media_type": "image/jpeg",
-                            "data": image_base64
+                            "data": image_base64,
                         },
                     },
                     {
                         "type": "text",
-                        "text": "Analyze this image. Check whether it contains the text \"be used as reference rates\". Parse out the 3-letter ISO currency code from the second column. For instance `USD` from `USD/INR`. Provide a JSON response like the following structure:[\"has_reference_rates\": true or false, \"headers\": [<list of column headers>], \"date\": \"<date as DD-MM-YYYY>\", \"time\": \"<time of publishing in HH:MM AM/PM format>\", \"forex_rates\": [{\"currency_code\": \"<currency short code>\"\",\"rates\": [83.57, 84.42, 83.50, 84.59, 83.50, 84.59, 82.55, 84.90}]"
-                    }
-                ]
+                        "text": 'Analyze this image. Check whether it contains the text "be used as reference rates". Parse out the 3-letter ISO currency code from the second column. For instance `USD` from `USD/INR`. Provide a JSON response like the following structure:["has_reference_rates": true or false, "headers": [<list of column headers>], "date": "<date as DD-MM-YYYY>", "time": "<time of publishing in HH:MM AM/PM format>", "forex_rates": [{"currency_code": "<currency short code>"","rates": [83.57, 84.42, 83.50, 84.59, 83.50, 84.59, 82.55, 84.90}]',
+                    },
+                ],
             }
         ]
 
         response = client.messages.create(
-            model="claude-3-haiku-20240307",
-            max_tokens=4096,
-            messages=messages
+            model="claude-3-haiku-20240307", max_tokens=4096, messages=messages
         )
 
         response_json = json.loads(response.content[0].text)
-        if response_json.get('has_reference_rates'):
+        if response_json.get("has_reference_rates"):
             if response_json.get("headers")[1:] == TABLE_COLUMNS:
-                date_str = response_json['date']
-                time_str = response_json['time']
+                date_str = response_json["date"]
+                time_str = response_json["time"]
 
                 date_time_str = f"Date: {date_str}\nTime: {time_str}"
                 extracted_date_time = extract_date_time(date_time_str)
@@ -265,9 +295,7 @@ def process_as_image(file_content: io.BytesIO) -> Tuple[datetime, List[Dict[str,
 
 
 def process_content(
-    file_content: io.BytesIO,
-    save_file: bool = False,
-    output_dir: Optional[str] = None
+    file_content: io.BytesIO, save_file: bool = False, output_dir: Optional[str] = None
 ) -> None:
     """Process the content, extracting data and saving to CSV."""
     try:
@@ -283,7 +311,9 @@ def process_content(
                 break
 
         if not reference_page:
-            raise ValueError("Text about reference rates not found on the first two pages.")
+            raise ValueError(
+                "Text about reference rates not found on the first two pages."
+            )
 
         rates_data = extract_currency_rates(reference_page)
     except Exception as e:
@@ -303,9 +333,7 @@ def process_content(
 
 
 def parse_historical_data(
-    directory: str,
-    save_file: bool = True,
-    output_dir: Optional[str] = None
+    directory: str, save_file: bool = True, output_dir: Optional[str] = None
 ) -> None:
     """Parse historical PDF files in the given directory."""
     all_pdfs = sorted(glob.glob(os.path.join(directory, "**/*.pdf"), recursive=True))
