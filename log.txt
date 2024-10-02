@@ -720,3 +720,4 @@ Traceback (most recent call last):
 requests.exceptions.ConnectionError: HTTPSConnectionPool(host='sbi.co.indocuments', port=443): Max retries exceeded with url: /16012/1400784/FOREX_CARD_RATES.pdf (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7fc306477490>: Failed to establish a new connection: [Errno -2] Name or service not known'))
 2024-10-01 10:40:27,728 - __main__ - WARNING - Ambiguous date found: Date 01-10-2024. Using file creation date as tie-breaker.
 2024-10-01 16:42:43,831 - __main__ - WARNING - Ambiguous date found: Date 01-10-2024. Using file creation date as tie-breaker.
+2024-10-02 10:39:32,922 - __main__ - WARNING - Ambiguous date found: Date 01-10-2024. Using file creation date as tie-breaker.
