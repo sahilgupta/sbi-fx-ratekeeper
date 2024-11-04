@@ -742,3 +742,4 @@ requests.exceptions.ConnectionError: HTTPSConnectionPool(host='sbi.co.indocument
 2024-10-12 16:41:53,480 - __main__ - WARNING - Ambiguous date found: Date 11-10-2024. Using file creation date as tie-breaker.
 2024-10-13 10:37:44,070 - __main__ - WARNING - Ambiguous date found: Date 11-10-2024. Using file creation date as tie-breaker.
 2024-10-13 16:39:30,557 - __main__ - WARNING - Ambiguous date found: Date 11-10-2024. Using file creation date as tie-breaker.
+2024-11-04 10:40:33,431 - __main__ - WARNING - Ambiguous date found: Date 04-11-2024. Using file creation date as tie-breaker.
