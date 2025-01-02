@@ -1035,3 +1035,4 @@ Traceback (most recent call last):
   File "/opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/site-packages/requests/adapters.py", line 597, in send
     raise ConnectionError(e, request=request)
 requests.exceptions.ConnectionError: HTTPSConnectionPool(host='www.sbi.co.in', port=443): Max retries exceeded with url: /documents/16012/1400784/FOREX_CARD_RATES.pdf (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7f8c96beae90>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution'))
+2025-01-02 10:38:08,877 - __main__ - WARNING - Ambiguous date found: Date 02-01-2025. Using file creation date as tie-breaker.
