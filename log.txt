@@ -1642,3 +1642,92 @@ Traceback (most recent call last):
 requests.exceptions.ConnectionError: HTTPSConnectionPool(host='www.sbi.co.in', port=443): Max retries exceeded with url: /documents/16012/1400784/FOREX_CARD_RATES.pdf (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7f722502b7a0>: Failed to establish a new connection: [Errno 101] Network is unreachable'))
 2025-06-12 10:46:22,075 - __main__ - WARNING - Ambiguous date found: Date 12-06-2025. Using file creation date as tie-breaker.
 2025-06-12 16:47:20,970 - __main__ - WARNING - Ambiguous date found: Date 12-06-2025. Using file creation date as tie-breaker.
+2025-06-25 16:50:12,361 - __main__ - ERROR - Failed to download PDF from https://www.sbi.co.in/documents/16012/1400784/FOREX_CARD_RATES.pdf
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.12.10/x64/lib/python3.12/site-packages/urllib3/connectionpool.py", line 468, in _make_request
+    six.raise_from(e, None)
+  File "<string>", line 3, in raise_from
+  File "/opt/hostedtoolcache/Python/3.12.10/x64/lib/python3.12/site-packages/urllib3/connectionpool.py", line 463, in _make_request
+    httplib_response = conn.getresponse()
+                       ^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.10/x64/lib/python3.12/http/client.py", line 1430, in getresponse
+    response.begin()
+  File "/opt/hostedtoolcache/Python/3.12.10/x64/lib/python3.12/http/client.py", line 331, in begin
+    version, status, reason = self._read_status()
+                              ^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.10/x64/lib/python3.12/http/client.py", line 292, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.10/x64/lib/python3.12/socket.py", line 720, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.10/x64/lib/python3.12/ssl.py", line 1251, in recv_into
+    return self.read(nbytes, buffer)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.10/x64/lib/python3.12/ssl.py", line 1103, in read
+    return self._sslobj.read(len, buffer)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TimeoutError: The read operation timed out
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.12.10/x64/lib/python3.12/site-packages/urllib3/connectionpool.py", line 716, in urlopen
+    httplib_response = self._make_request(
+                       ^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.10/x64/lib/python3.12/site-packages/urllib3/connectionpool.py", line 470, in _make_request
+    self._raise_timeout(err=e, url=url, timeout_value=read_timeout)
+  File "/opt/hostedtoolcache/Python/3.12.10/x64/lib/python3.12/site-packages/urllib3/connectionpool.py", line 358, in _raise_timeout
+    raise ReadTimeoutError(
+urllib3.exceptions.ReadTimeoutError: HTTPSConnectionPool(host='sbi.co.in', port=443): Read timed out. (read timeout=10)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.12.10/x64/lib/python3.12/site-packages/requests/adapters.py", line 667, in send
+    resp = conn.urlopen(
+           ^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.10/x64/lib/python3.12/site-packages/urllib3/connectionpool.py", line 830, in urlopen
+    return self.urlopen(
+           ^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.10/x64/lib/python3.12/site-packages/urllib3/connectionpool.py", line 830, in urlopen
+    return self.urlopen(
+           ^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.10/x64/lib/python3.12/site-packages/urllib3/connectionpool.py", line 830, in urlopen
+    return self.urlopen(
+           ^^^^^^^^^^^^^
+  [Previous line repeated 2 more times]
+  File "/opt/hostedtoolcache/Python/3.12.10/x64/lib/python3.12/site-packages/urllib3/connectionpool.py", line 802, in urlopen
+    retries = retries.increment(
+              ^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.10/x64/lib/python3.12/site-packages/urllib3/util/retry.py", line 594, in increment
+    raise MaxRetryError(_pool, url, error or ResponseError(cause))
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='sbi.co.in', port=443): Max retries exceeded with url: /documents/16012/1400784/FOREX_CARD_RATES.pdf (Caused by ReadTimeoutError("HTTPSConnectionPool(host='sbi.co.in', port=443): Read timed out. (read timeout=10)"))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/runner/work/sbi-fx-ratekeeper/sbi-fx-ratekeeper/main.py", line 221, in get_latest_pdf_from_sbi
+    response = download_pdf(url, session)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/sbi-fx-ratekeeper/sbi-fx-ratekeeper/main.py", line 211, in download_pdf
+    return session.get(url, timeout=10)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.10/x64/lib/python3.12/site-packages/requests/sessions.py", line 602, in get
+    return self.request("GET", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.10/x64/lib/python3.12/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.10/x64/lib/python3.12/site-packages/requests/sessions.py", line 724, in send
+    history = [resp for resp in gen]
+                                ^^^
+  File "/opt/hostedtoolcache/Python/3.12.10/x64/lib/python3.12/site-packages/requests/sessions.py", line 265, in resolve_redirects
+    resp = self.send(
+           ^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.10/x64/lib/python3.12/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.10/x64/lib/python3.12/site-packages/requests/adapters.py", line 700, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPSConnectionPool(host='sbi.co.in', port=443): Max retries exceeded with url: /documents/16012/1400784/FOREX_CARD_RATES.pdf (Caused by ReadTimeoutError("HTTPSConnectionPool(host='sbi.co.in', port=443): Read timed out. (read timeout=10)"))
