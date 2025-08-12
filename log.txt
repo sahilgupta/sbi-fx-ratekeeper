@@ -1942,3 +1942,4 @@ Traceback (most recent call last):
     raise Exception("Unable to retrieve a valid PDF")
 Exception: Unable to retrieve a valid PDF
 2025-08-11 16:48:42,706 - __main__ - WARNING - Ambiguous date found: Date 11-08-2025. Using file creation date as tie-breaker.
+2025-08-12 10:44:08,295 - __main__ - WARNING - Ambiguous date found: Date 12-08-2025. Using file creation date as tie-breaker.
