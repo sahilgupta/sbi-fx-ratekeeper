@@ -2113,3 +2113,4 @@ Traceback (most recent call last):
   File "/home/runner/work/sbi-fx-ratekeeper/sbi-fx-ratekeeper/main.py", line 240, in get_latest_pdf_from_sbi
     raise Exception("Unable to retrieve a valid PDF")
 Exception: Unable to retrieve a valid PDF
+2025-09-02 10:41:53,577 - __main__ - WARNING - Ambiguous date found: Date 02-09-2025. Using file creation date as tie-breaker.
