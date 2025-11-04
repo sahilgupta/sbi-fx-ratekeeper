@@ -7577,3 +7577,76 @@ Traceback (most recent call last):
     raise SSLError(e, request=request)
 requests.exceptions.SSLError: HTTPSConnectionPool(host='www.sbi.co.in', port=443): Max retries exceeded with url: /documents/16012/1400784/FOREX_CARD_RATES.pdf (Caused by SSLError(CertificateError("hostname 'www.sbi.co.in' doesn't match either of 'sbi.bank.in', 'www.sbi.bank.in'")))
 2025-11-04 10:46:05,230 - __main__ - WARNING - Ambiguous date found: Date 04-11-2025. Using file creation date as tie-breaker.
+2025-11-04 16:49:06,108 - __main__ - ERROR - Failed to download PDF from https://www.sbi.co.in/documents/16012/1400784/FOREX_CARD_RATES.pdf
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.12.12/x64/lib/python3.12/site-packages/urllib3/connection.py", line 174, in _new_conn
+    conn = connection.create_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.12/x64/lib/python3.12/site-packages/urllib3/util/connection.py", line 95, in create_connection
+    raise err
+  File "/opt/hostedtoolcache/Python/3.12.12/x64/lib/python3.12/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    sock.connect(sa)
+OSError: [Errno 101] Network is unreachable
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.12.12/x64/lib/python3.12/site-packages/urllib3/connectionpool.py", line 716, in urlopen
+    httplib_response = self._make_request(
+                       ^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.12/x64/lib/python3.12/site-packages/urllib3/connectionpool.py", line 404, in _make_request
+    self._validate_conn(conn)
+  File "/opt/hostedtoolcache/Python/3.12.12/x64/lib/python3.12/site-packages/urllib3/connectionpool.py", line 1061, in _validate_conn
+    conn.connect()
+  File "/opt/hostedtoolcache/Python/3.12.12/x64/lib/python3.12/site-packages/urllib3/connection.py", line 363, in connect
+    self.sock = conn = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.12/x64/lib/python3.12/site-packages/urllib3/connection.py", line 186, in _new_conn
+    raise NewConnectionError(
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x7f14b9b3f3b0>: Failed to establish a new connection: [Errno 101] Network is unreachable
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.12.12/x64/lib/python3.12/site-packages/requests/adapters.py", line 667, in send
+    resp = conn.urlopen(
+           ^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.12/x64/lib/python3.12/site-packages/urllib3/connectionpool.py", line 830, in urlopen
+    return self.urlopen(
+           ^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.12/x64/lib/python3.12/site-packages/urllib3/connectionpool.py", line 830, in urlopen
+    return self.urlopen(
+           ^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.12/x64/lib/python3.12/site-packages/urllib3/connectionpool.py", line 830, in urlopen
+    return self.urlopen(
+           ^^^^^^^^^^^^^
+  [Previous line repeated 2 more times]
+  File "/opt/hostedtoolcache/Python/3.12.12/x64/lib/python3.12/site-packages/urllib3/connectionpool.py", line 802, in urlopen
+    retries = retries.increment(
+              ^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.12/x64/lib/python3.12/site-packages/urllib3/util/retry.py", line 594, in increment
+    raise MaxRetryError(_pool, url, error or ResponseError(cause))
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='www.sbi.co.in', port=443): Max retries exceeded with url: /documents/16012/1400784/FOREX_CARD_RATES.pdf (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7f14b9b3f3b0>: Failed to establish a new connection: [Errno 101] Network is unreachable'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/runner/work/sbi-fx-ratekeeper/sbi-fx-ratekeeper/main.py", line 221, in get_latest_pdf_from_sbi
+    response = download_pdf(url, session)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/sbi-fx-ratekeeper/sbi-fx-ratekeeper/main.py", line 211, in download_pdf
+    return session.get(url, timeout=10)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.12/x64/lib/python3.12/site-packages/requests/sessions.py", line 602, in get
+    return self.request("GET", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.12/x64/lib/python3.12/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.12/x64/lib/python3.12/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.12/x64/lib/python3.12/site-packages/requests/adapters.py", line 700, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPSConnectionPool(host='www.sbi.co.in', port=443): Max retries exceeded with url: /documents/16012/1400784/FOREX_CARD_RATES.pdf (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7f14b9b3f3b0>: Failed to establish a new connection: [Errno 101] Network is unreachable'))
+2025-11-04 16:49:23,833 - __main__ - WARNING - Ambiguous date found: Date 04-11-2025. Using file creation date as tie-breaker.
