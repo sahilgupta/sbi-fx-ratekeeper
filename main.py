@@ -21,7 +21,7 @@ from urllib3.util.retry import Retry
 
 # Constants
 SBI_DAILY_RATES_URL = (
-    "https://www.sbi.co.in/documents/16012/1400784/FOREX_CARD_RATES.pdf"
+    "https://sbi.bank.in/documents/16012/1400784/FOREX_CARD_RATES.pdf"
 )
 SBI_DAILY_RATES_URL_FALLBACK = (
     "https://bank.sbi/documents/16012/1400784/FOREX_CARD_RATES.pdf"
