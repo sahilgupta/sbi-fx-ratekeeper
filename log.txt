@@ -13499,3 +13499,4 @@ Traceback (most recent call last):
   File "/opt/hostedtoolcache/Python/3.12.12/x64/lib/python3.12/site-packages/requests/adapters.py", line 698, in send
     raise SSLError(e, request=request)
 requests.exceptions.SSLError: HTTPSConnectionPool(host='www.sbi.co.in', port=443): Max retries exceeded with url: /documents/16012/1400784/FOREX_CARD_RATES.pdf (Caused by SSLError(CertificateError("hostname 'www.sbi.co.in' doesn't match either of 'sbi.bank.in', 'www.sbi.bank.in'")))
+2025-12-25 16:45:44,593 - __main__ - INFO - Failed to download PDFs directly. Attempting with proxies...
