@@ -13523,3 +13523,16 @@ requests.exceptions.SSLError: HTTPSConnectionPool(host='www.sbi.co.in', port=443
 2026-01-11 16:44:25,794 - __main__ - WARNING - Ambiguous date found: Date 09-01-2026. Using file creation date as tie-breaker.
 2026-01-12 10:47:30,313 - __main__ - WARNING - Ambiguous date found: Date 12-01-2026. Using file creation date as tie-breaker.
 2026-01-12 16:49:55,442 - __main__ - WARNING - Ambiguous date found: Date 12-01-2026. Using file creation date as tie-breaker.
+2026-01-16 16:50:41,700 - __main__ - INFO - Failed to download PDFs directly. Attempting with proxies...
+2026-01-16 16:50:46,985 - __main__ - INFO - Failed to download PDFs directly. Attempting with proxies...
+2026-01-16 16:51:15,736 - __main__ - INFO - Failed to download PDFs directly. Attempting with proxies...
+2026-01-16 16:51:23,591 - __main__ - INFO - Failed to download PDFs directly. Attempting with proxies...
+2026-01-16 16:51:36,856 - __main__ - INFO - Failed to download PDFs directly. Attempting with proxies...
+2026-01-16 16:51:38,681 - __main__ - ERROR - An error occurred: Unable to retrieve a valid PDF
+Traceback (most recent call last):
+  File "/home/runner/work/sbi-fx-ratekeeper/sbi-fx-ratekeeper/main.py", line 354, in <module>
+    file_content = get_latest_pdf_from_sbi()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/sbi-fx-ratekeeper/sbi-fx-ratekeeper/main.py", line 240, in get_latest_pdf_from_sbi
+    raise Exception("Unable to retrieve a valid PDF")
+Exception: Unable to retrieve a valid PDF
