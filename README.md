@@ -6,6 +6,29 @@ Well, worry no more. SBI FX RateKeeper saves the daily SBI forex rates in a CSV 
 
 - New rates are added daily, automatically
 - Fully compatible with Microsoft Excel or Google Sheets
+- **Enhanced script now supports all 31 available currencies automatically**
+
+## Consolidated Month-End Rates CSV
+
+The `update_forex_rate.py` script generates a consolidated `forex_inr_rates.csv` file containing month-end TT BUY rates for all available currencies. This script has been enhanced to:
+
+- **Automatically discover all currencies**: No need to manually specify currency codes
+- **Use local CSV files**: Reads directly from the `csv_files/` folder instead of downloading from GitHub
+- **Support all 31 currencies**: AED, AUD, BDT, BHD, CAD, CHF, CNY, DKK, EUR, GBP, HKD, IDR, JPY, KES, KRW, KWD, LKR, MYR, NOK, NZD, OMR, PKR, QAR, RUB, SAR, SEK, SGD, THB, TRY, USD, ZAR
+- **Dynamic processing**: Automatically adapts to new currencies when CSV files are added
+
+### Usage
+
+To generate the consolidated month-end rates CSV:
+
+```bash
+python update_forex_rate.py
+```
+
+This will create a `forex_inr_rates.csv` file with:
+- Date column (month-end dates from January 2020 to present)
+- One column for each available currency with TT BUY rates
+- Automatic fallback to previous dates when rates are not available for specific month-ends
 
 You can easily [browse and search the rates on GitHub](https://github.com/sahilgupta/sbi_forex_rates/tree/main/csv_files):
 
