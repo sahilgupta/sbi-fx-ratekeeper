@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>SBI FX Rate Explorer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f8fafc;
+            color: #1e293b;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+            transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2563eb;
+        }
+
+        /* --- Modern Dark Theme Styles --- */
+        body.dark {
+            background: #0f172a;
+            color: #f8fafc;
+        }
+
+        body.dark .card {
+            background: #1e293b;
+            color: #f8fafc;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        body.dark .value {
+            color: #60a5fa;
+        }
+
+        body.dark .bg-light {
+            background-color: #334155 !important;
+            color: #f8fafc !important;
+        }
+
+        body.dark .form-control,
+        body.dark .form-select {
+            background-color: #334155;
+            border-color: #475569;
+            color: #f8fafc;
+        }
+
+        body.dark .form-control:focus,
+        body.dark .form-select:focus {
+            background-color: #334155;
+            border-color: #60a5fa;
+            color: #f8fafc;
+            box-shadow: 0 0 0 0.25rem rgba(96, 165, 250, 0.25);
+        }
+
+        body.dark .table {
+            color: #f8fafc;
+            --bs-table-bg: transparent;
+            --bs-table-striped-bg: rgba(255, 255, 255, 0.03);
+            border-color: #334155;
+        }
+
+        body.dark .table th,
+        body.dark .table td {
+            border-color: #334155;
+            color: #e2e8f0;
+        }
+
+        body.dark .dataTables_wrapper .dataTables_length,
+        body.dark .dataTables_wrapper .dataTables_filter,
+        body.dark .dataTables_wrapper .dataTables_info,
+        body.dark .dataTables_wrapper .dataTables_paginate {
+            color: #cbd5e1 !important;
+        }
+
+        body.dark .dataTables_wrapper .dataTables_paginate .paginate_button {
+            color: #cbd5e1 !important;
+        }
+
+        body.dark .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: #2563eb !important;
+            border-color: #2563eb !important;
+            color: #ffffff !important;
+        }
+
+        body.dark .modal-content {
+            background-color: #1e293b;
+            color: #f8fafc;
+            border-color: #334155;
+        }
+
+        body.dark .modal-header {
+            border-bottom-color: #334155;
+        }
+
+        body.dark .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+
+        body.dark footer,
+        body.dark .text-muted {
+            color: #94a3b8 !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2><i class="bi bi-currency-exchange"></i> SBI FX Rate Explorer</h2>
+            <button id="theme" class="btn btn-outline-secondary">🌙</button>
+        </div>
+
+        <div class="card p-3 mb-3">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label>Currency</label>
+                    <select id="currencySelect" class="form-select" onchange="onCurrencyChange()">
+                        <option value="USD" selected>USD - US Dollar</option>
+                        <option value="AED">AED - UAE Dirham</option>
+                        <option value="AUD">AUD - Australian Dollar</option>
+                        <option value="BDT">BDT - Bangladeshi Taka</option>
+                        <option value="BHD">BHD - Bahraini Dinar</option>
+                        <option value="CAD">CAD - Canadian Dollar</option>
+                        <option value="CHF">CHF - Swiss Franc</option>
+                        <option value="CNY">CNY - Chinese Yuan</option>
+                        <option value="DKK">DKK - Danish Krone</option>
+                        <option value="EUR">EUR - Euro</option>
+                        <option value="GBP">GBP - British Pound</option>
+                        <option value="HKD">HKD - Hong Kong Dollar</option>
+                        <option value="IDR">IDR - Indonesian Rupiah</option>
+                        <option value="JPY">JPY - Japanese Yen</option>
+                        <option value="KES">KES - Kenyan Shilling</option>
+                        <option value="KRW">KRW - South Korean Won</option>
+                        <option value="KWD">KWD - Kuwaiti Dinar</option>
+                        <option value="LKR">LKR - Sri Lankan Rupee</option>
+                        <option value="MYR">MYR - Malaysian Ringgit</option>
+                        <option value="NOK">NOK - Norwegian Krone</option>
+                        <option value="NZD">NZD - New Zealand Dollar</option>
+                        <option value="OMR">OMR - Omani Rial</option>
+                        <option value="PKR">PKR - Pakistani Rupee</option>
+                        <option value="QAR">QAR - Qatari Riyal</option>
+                        <option value="RUB">RUB - Russian Ruble</option>
+                        <option value="SAR">SAR - Saudi Riyal</option>
+                        <option value="SEK">SEK - Swedish Krona</option>
+                        <option value="SGD">SGD - Singapore Dollar</option>
+                        <option value="THB">THB - Thai Baht</option>
+                        <option value="TRY">TRY - Turkish Lira</option>
+                        <option value="ZAR">ZAR - South African Rand</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label>Date</label>
+                    <input id="date" type="date" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label id="amtLabel">Amount (USD)</label>
+                    <input id="usd" type="number" class="form-control" value="1000">
+                </div>
+                <div class="col-md-3 d-flex gap-2 align-items-end">
+                    <button class="btn btn-outline-secondary" onclick="toggleSwapDirection()"
+                        title="Swap conversion direction"><i class="bi bi-arrow-left-right me-1"></i><span
+                            id="swapText">USD ➔ INR</span></button>
+                    <button class="btn btn-primary flex-grow-1" onclick="convert()">Convert</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-3">
+                <div class="card p-3"><small
+                        class="text-muted fw-semibold d-flex justify-content-between align-items-center">TT BUY <span
+                            class="badge bg-info-subtle text-info border border-info-subtle" style="font-size:0.65rem"
+                            title="Applicable for Income Tax Rule 115 conversion">Tax Rule 115</span></small>
+                    <div id="ttbuy" class="value">-</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3"><small class="text-muted fw-semibold">TT SELL</small>
+                    <div id="ttsell" class="value">-</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3"><small class="text-muted fw-semibold">BILL BUY</small>
+                    <div id="billbuy" class="value">-</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3"><small class="text-muted fw-semibold" id="resultLabel">INR RESULT</small>
+                    <div id="inr" class="value">-</div><small id="rateUsedText" class="text-muted small">&nbsp;</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="card px-3 py-2 mb-3 bg-light border-0">
+            <div class="d-flex flex-wrap justify-content-between align-items-center small">
+                <div><i class="bi bi-graph-up-arrow text-primary me-1"></i><strong>Period High:</strong> <span
+                        id="statHigh" class="fw-semibold text-primary">-</span></div>
+                <div><i class="bi bi-graph-down-arrow text-danger me-1"></i><strong>Period Low:</strong> <span
+                        id="statLow" class="fw-semibold text-danger">-</span></div>
+                <div><i class="bi bi-clock-history text-success me-1"></i><strong>Latest Closing:</strong> <span
+                        id="statClose" class="fw-semibold text-success">-</span></div>
+                <div><i class="bi bi-file-earmark-text text-secondary me-1"></i><strong>Total Records:</strong> <span
+                        id="statCount" class="fw-semibold">-</span></div>
+            </div>
+        </div>
+
+        <div class="mb-3 text-muted small px-1"><i class="bi bi-info-circle text-primary me-1"></i><strong>Tax
+                Note:</strong> As per Rule 115 of Indian Income Tax Rules, SBI <strong>TT BUY</strong> rate is used for
+            converting foreign income into INR.</div>
+
+        <div class="card p-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="m-0"><i class="bi bi-table me-2"></i>Rate History</h5>
+                <button class="btn btn-sm btn-outline-secondary" onclick="resetFilters()"><i
+                        class="bi bi-arrow-counterclockwise me-1"></i>Reset Filters</button>
+            </div>
+
+            <div class="row g-2 mb-3 bg-light p-2 rounded align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label mb-1"><small class="fw-semibold">Year</small></label>
+                    <select id="filterYear" class="form-select form-select-sm" onchange="applyEntryFilter()">
+                        <option value="all" selected>All Years</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label mb-1"><small class="fw-semibold">Month</small></label>
+                    <select id="filterMonth" class="form-select form-select-sm" onchange="applyEntryFilter()">
+                        <option value="all" selected>All Months</option>
+                        <option value="01">01 - January</option>
+                        <option value="02">02 - February</option>
+                        <option value="03">03 - March</option>
+                        <option value="04">04 - April</option>
+                        <option value="05">05 - May</option>
+                        <option value="06">06 - June</option>
+                        <option value="07">07 - July</option>
+                        <option value="08">08 - August</option>
+                        <option value="09">09 - September</option>
+                        <option value="10">10 - October</option>
+                        <option value="11">11 - November</option>
+                        <option value="12">12 - December</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label mb-1"><small class="fw-semibold">From Date</small></label>
+                    <input id="fromDate" type="date" class="form-control form-control-sm" onchange="applyEntryFilter()">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label mb-1"><small class="fw-semibold">To Date</small></label>
+                    <input id="toDate" type="date" class="form-control form-control-sm" onchange="applyEntryFilter()">
+                </div>
+            </div>
+
+            <table id="tbl" class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>TT Buy</th>
+                        <th>TT Sell</th>
+                        <th>Bill Buy</th>
+                        <th>Bill Sell</th>
+                        <th>PDF</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <footer class="text-center mt-4 text-muted small">
+            Historical Rates Collected & Maintained by <a href="https://github.com/sahilgupta/sbi-fx-ratekeeper"
+                target="_blank" class="text-decoration-none fw-semibold"><i class="bi bi-github me-1"></i>Sahil Gupta
+                (sbi-fx-ratekeeper)</a>
+        </footer>
+    </div>
+
+    <!-- PDF Modal Viewer -->
+    <div class="modal fade" id="pdfModal" tabindex="-1" aria-labelledby="pdfModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered" style="height: 85vh;">
+            <div class="modal-content h-100">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="pdfModalLabel"><i
+                            class="bi bi-file-earmark-pdf me-2 text-danger"></i>FOREX RATE</h5>
+                    <a id="pdfDownloadLink" href="#" target="_blank"
+                        class="btn btn-sm btn-outline-primary ms-auto me-2"><i
+                            class="bi bi-box-arrow-up-right me-1"></i>Open in New Tab</a>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0" id="pdfContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+
+    <script>
+        let data = [], table;
+        const csvCache = {};
+        let isSwapped = false;
+
+        function toggleSwapDirection() {
+            isSwapped = !isSwapped;
+            let curr = document.getElementById("currencySelect").value;
+            let amtLabel = document.getElementById("amtLabel");
+            let swapText = document.getElementById("swapText");
+            let resultLabel = document.getElementById("resultLabel");
+
+            if (isSwapped) {
+                amtLabel.innerText = "Amount (INR)";
+                swapText.innerText = `INR ➔ ${curr}`;
+                resultLabel.innerText = `${curr} RESULT`;
+            } else {
+                amtLabel.innerText = `Amount (${curr})`;
+                swapText.innerText = `${curr} ➔ INR`;
+                resultLabel.innerText = "INR RESULT";
+            }
+            convert();
+        }
+
+        function onCurrencyChange() {
+            let curr = document.getElementById("currencySelect").value;
+            let amtLabel = document.getElementById("amtLabel");
+            let swapText = document.getElementById("swapText");
+            let resultLabel = document.getElementById("resultLabel");
+
+            if (isSwapped) {
+                amtLabel.innerText = "Amount (INR)";
+                swapText.innerText = `INR ➔ ${curr}`;
+                resultLabel.innerText = `${curr} RESULT`;
+            } else {
+                amtLabel.innerText = `Amount (${curr})`;
+                swapText.innerText = `${curr} ➔ INR`;
+                resultLabel.innerText = "INR RESULT";
+            }
+            loadCSV();
+        }
+
+        function getCsvUrl(curr) {
+            if (location.protocol === 'http:' || location.protocol === 'https:') {
+                return `./csv_files/SBI_REFERENCE_RATES_${curr}.csv`;
+            }
+            return `https://raw.githubusercontent.com/sahilgupta/sbi-fx-ratekeeper/main/csv_files/SBI_REFERENCE_RATES_${curr}.csv`;
+        }
+
+        async function loadCSV() {
+            let curr = document.getElementById("currencySelect").value;
+            let selectEl = document.getElementById("currencySelect");
+
+            if (csvCache[curr]) {
+                data = csvCache[curr];
+                populate();
+                autoSelectLatestDate();
+                return;
+            }
+
+            if (table) { table.destroy(); table = null; }
+            let tb = document.querySelector("#tbl tbody");
+            tb.innerHTML = `<tr><td colspan="6" class="text-center py-4"><div class="spinner-border text-primary" role="status"></div><div class="mt-2 text-muted">Loading ${curr} rates...</div></td></tr>`;
+            selectEl.disabled = true;
+
+            let url = getCsvUrl(curr);
+            try {
+                let resp = await fetch(url);
+                if (!resp.ok && (location.protocol === 'http:' || location.protocol === 'https:')) {
+                    url = `https://raw.githubusercontent.com/sahilgupta/sbi-fx-ratekeeper/main/csv_files/SBI_REFERENCE_RATES_${curr}.csv`;
+                    resp = await fetch(url);
+                }
+                if (!resp.ok) throw new Error("Fetch failed");
+                let text = await resp.text();
+                let parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
+                data = parsed.data.filter(x => x.DATE);
+                csvCache[curr] = data;
+                populate();
+                autoSelectLatestDate();
+            } catch (err) {
+                tb.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-danger"><i class="bi bi-exclamation-triangle"></i> Failed to load rates for ${curr}.</td></tr>`;
+            } finally {
+                selectEl.disabled = false;
+            }
+        }
+
+        function formatDateDMY(dateStr) {
+            if (!dateStr || dateStr === '-') return '-';
+            const cleanDate = dateStr.trim().split(" ")[0];
+            const parts = cleanDate.split("-");
+            if (parts.length === 3 && parts[0].length === 4) {
+                return `${parts[2].padStart(2, '0')}-${parts[1].padStart(2, '0')}-${parts[0]}`;
+            }
+            return dateStr;
+        }
+
+        function getPdfUrl(pdfPath) {
+            if (!pdfPath || pdfPath === '-' || pdfPath === 'undefined') return '';
+            pdfPath = pdfPath.trim();
+            if (pdfPath.includes("github.com/") && pdfPath.includes("/blob/")) {
+                pdfPath = pdfPath.replace("github.com", "raw.githubusercontent.com").replace("/blob/", "/");
+            }
+            if (pdfPath.startsWith('http://') || pdfPath.startsWith('https://')) {
+                return pdfPath;
+            }
+            const cleanPath = pdfPath.startsWith('/') ? pdfPath.substring(1) : pdfPath;
+            if (location.protocol === 'http:' || location.protocol === 'https:') {
+                return `./${cleanPath}`;
+            }
+            return `https://raw.githubusercontent.com/sahilgupta/sbi-fx-ratekeeper/main/${cleanPath}`;
+        }
+
+        let pdfModalInstance, currentBlobUrl = null;
+        async function openPdfModal(rawUrl, dateStr) {
+            if (!rawUrl || rawUrl === 'undefined' || rawUrl === '-') return;
+            const containerEl = document.getElementById("pdfContainer");
+            const modalTitle = document.getElementById("pdfModalLabel");
+            const formattedDate = formatDateDMY(dateStr);
+            if (modalTitle) {
+                modalTitle.innerHTML = `<i class="bi bi-file-earmark-pdf me-2 text-danger"></i>FOREX RATE ${formattedDate !== '-' ? ` - ${formattedDate}` : ''}`;
+            }
+            document.getElementById("pdfDownloadLink").href = rawUrl;
+
+            if (currentBlobUrl) {
+                URL.revokeObjectURL(currentBlobUrl);
+                currentBlobUrl = null;
+            }
+
+            containerEl.innerHTML = `<div class="d-flex flex-column align-items-center justify-content-center h-100"><div class="spinner-border text-primary" role="status"></div><div class="mt-2 text-muted">Fetching PDF document...</div></div>`;
+
+            if (!pdfModalInstance) {
+                pdfModalInstance = new bootstrap.Modal(document.getElementById('pdfModal'));
+            }
+            pdfModalInstance.show();
+
+            try {
+                let resp = await fetch(rawUrl);
+                if (!resp.ok) throw new Error("Fetch failed");
+                let blob = await resp.blob();
+                let pdfBlob = new Blob([blob], { type: 'application/pdf' });
+                currentBlobUrl = URL.createObjectURL(pdfBlob);
+                containerEl.innerHTML = `<embed src="${currentBlobUrl}" type="application/pdf" style="width:100%; height:100%; border:none;">`;
+            } catch (err) {
+                containerEl.innerHTML = `<div class="d-flex flex-column align-items-center justify-content-center h-100 text-danger"><i class="bi bi-exclamation-triangle fs-2"></i><div class="mt-2 fw-semibold">Unable to load PDF preview natively.</div><a href="${rawUrl}" target="_blank" class="btn btn-primary btn-sm mt-3"><i class="bi bi-box-arrow-up-right me-1"></i>Open PDF in New Tab</a></div>`;
+            }
+        }
+
+        function populate() {
+            if (table) table.destroy();
+            let tb = document.querySelector("#tbl tbody");
+            tb.innerHTML = data.map(r => {
+                let pdfPath = r["PDF FILE"];
+                let pdfUrl = getPdfUrl(pdfPath);
+                let pdfCell = pdfUrl ? `<button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="openPdfModal('${pdfUrl}', '${r.DATE || ''}')"><i class="bi bi-file-earmark-pdf me-1"></i>View PDF</button>` : '-';
+                return `<tr>
+<td data-order="${r.DATE || ''}">${formatDateDMY(r.DATE)}</td>
+<td>${r["TT BUY"] || '-'}</td>
+<td>${r["TT SELL"] || '-'}</td>
+<td>${r["BILL BUY"] || '-'}</td>
+<td>${r["BILL SELL"] || '-'}</td>
+<td>${pdfCell}</td>
+</tr>`;
+            }).join('');
+            table = $("#tbl").DataTable({
+                order: [[0, "desc"]],
+                pageLength: 50,
+                lengthMenu: [[10, 25, 50, 100, 200, 500, 1000, -1], [10, 25, 50, 100, 200, 500, 1000, "All"]]
+            });
+            populateYearDropdown();
+            updatePeriodStats();
+        }
+
+        function updatePeriodStats() {
+            let rates = [];
+            if (table && table.rows) {
+                let filteredData = table.rows({ filter: 'applied' }).data();
+                for (let i = 0; i < filteredData.length; i++) {
+                    let val = parseFloat(filteredData[i][1]);
+                    if (!isNaN(val) && val > 0) rates.push(val);
+                }
+            } else {
+                rates = data.map(x => parseFloat(x["TT BUY"])).filter(v => !isNaN(v) && v > 0);
+            }
+
+            if (rates.length > 0) {
+                let high = Math.max(...rates);
+                let low = Math.min(...rates);
+                let closing = rates[0];
+                document.getElementById("statHigh").innerText = "₹" + high.toFixed(2);
+                document.getElementById("statLow").innerText = "₹" + low.toFixed(2);
+                document.getElementById("statClose").innerText = "₹" + closing.toFixed(2);
+                document.getElementById("statCount").innerText = rates.length.toLocaleString();
+            } else {
+                document.getElementById("statHigh").innerText = "-";
+                document.getElementById("statLow").innerText = "-";
+                document.getElementById("statClose").innerText = "-";
+                document.getElementById("statCount").innerText = "0";
+            }
+        }
+
+        function populateYearDropdown() {
+            const years = [...new Set(data.map(r => r.DATE ? r.DATE.substring(0, 4) : "").filter(y => y && !isNaN(y)))].sort().reverse();
+            const yrSelect = document.getElementById("filterYear");
+            if (!yrSelect) return;
+            const currentVal = yrSelect.value;
+            yrSelect.innerHTML = '<option value="all">All Years</option>' + years.map(y => `<option value="${y}">${y}</option>`).join('');
+            if (years.includes(currentVal)) yrSelect.value = currentVal;
+        }
+
+        $.fn.dataTable.ext.search.push((settings, searchData) => {
+            let rawDateStr = searchData[0];
+            if (!rawDateStr || rawDateStr === "-") return false;
+
+            let parts = rawDateStr.trim().split(" ")[0].split("-");
+            let year = "", month = "", day = "", isoDate = "";
+
+            if (parts.length === 3) {
+                if (parts[0].length === 4) {
+                    year = parts[0]; month = parts[1]; day = parts[2];
+                } else if (parts[2].length === 4) {
+                    day = parts[0]; month = parts[1]; year = parts[2];
+                }
+                isoDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            }
+
+            let selectedYear = document.getElementById("filterYear") ? document.getElementById("filterYear").value : "all";
+            let selectedMonth = document.getElementById("filterMonth") ? document.getElementById("filterMonth").value : "all";
+            let fromDateVal = document.getElementById("fromDate") ? document.getElementById("fromDate").value : "";
+            let toDateVal = document.getElementById("toDate") ? document.getElementById("toDate").value : "";
+
+            if (selectedYear !== "all" && year !== selectedYear) {
+                return false;
+            }
+
+            if (selectedMonth !== "all" && month.padStart(2, '0') !== selectedMonth.padStart(2, '0')) {
+                return false;
+            }
+
+            if (fromDateVal && isoDate < fromDateVal) {
+                return false;
+            }
+            if (toDateVal && isoDate > toDateVal) {
+                return false;
+            }
+
+            return true;
+        });
+
+        function applyEntryFilter() {
+            if (table) {
+                table.draw();
+                updatePeriodStats();
+            }
+        }
+
+        function resetFilters() {
+            if (document.getElementById("filterYear")) document.getElementById("filterYear").value = "all";
+            if (document.getElementById("filterMonth")) document.getElementById("filterMonth").value = "all";
+            if (document.getElementById("fromDate")) document.getElementById("fromDate").value = "";
+            if (document.getElementById("toDate")) document.getElementById("toDate").value = "";
+            applyEntryFilter();
+        }
+
+        function saveState() {
+            const curr = document.getElementById("currencySelect").value;
+            const date = document.getElementById("date").value;
+            const amt = document.getElementById("usd").value;
+            localStorage.setItem("sbi_fx_currency", curr);
+            if (date) localStorage.setItem("sbi_fx_date", date);
+            if (amt) localStorage.setItem("sbi_fx_amount", amt);
+            localStorage.setItem("sbi_fx_swapped", isSwapped ? "true" : "false");
+        }
+
+        function restoreInitialState() {
+            const savedCurr = localStorage.getItem("sbi_fx_currency");
+            const savedAmt = localStorage.getItem("sbi_fx_amount");
+            const savedSwapped = localStorage.getItem("sbi_fx_swapped");
+
+            const currSelect = document.getElementById("currencySelect");
+            if (savedCurr && Array.from(currSelect.options).some(opt => opt.value === savedCurr)) {
+                currSelect.value = savedCurr;
+            }
+            if (savedAmt) {
+                document.getElementById("usd").value = savedAmt;
+            }
+            if (savedSwapped === "true") {
+                isSwapped = true;
+                let curr = currSelect.value;
+                document.getElementById("amtLabel").innerText = "Amount (INR)";
+                document.getElementById("swapText").innerText = `INR ➔ ${curr}`;
+                document.getElementById("resultLabel").innerText = `${curr} RESULT`;
+            }
+        }
+
+        function toggleSwapDirection() {
+            isSwapped = !isSwapped;
+            let curr = document.getElementById("currencySelect").value;
+            let amtLabel = document.getElementById("amtLabel");
+            let swapText = document.getElementById("swapText");
+            let resultLabel = document.getElementById("resultLabel");
+
+            if (isSwapped) {
+                amtLabel.innerText = "Amount (INR)";
+                swapText.innerText = `INR ➔ ${curr}`;
+                resultLabel.innerText = `${curr} RESULT`;
+            } else {
+                amtLabel.innerText = `Amount (${curr})`;
+                swapText.innerText = `${curr} ➔ INR`;
+                resultLabel.innerText = "INR RESULT";
+            }
+            saveState();
+            convert();
+        }
+
+        function onCurrencyChange() {
+            let curr = document.getElementById("currencySelect").value;
+            let amtLabel = document.getElementById("amtLabel");
+            let swapText = document.getElementById("swapText");
+            let resultLabel = document.getElementById("resultLabel");
+
+            if (isSwapped) {
+                amtLabel.innerText = "Amount (INR)";
+                swapText.innerText = `INR ➔ ${curr}`;
+                resultLabel.innerText = `${curr} RESULT`;
+            } else {
+                amtLabel.innerText = `Amount (${curr})`;
+                swapText.innerText = `${curr} ➔ INR`;
+                resultLabel.innerText = "INR RESULT";
+            }
+            saveState();
+            loadCSV();
+        }
+
+        function autoSelectLatestDate() {
+            if (data.length > 0) {
+                const savedDate = localStorage.getItem("sbi_fx_date");
+                let targetDate = "";
+                if (savedDate && data.some(x => x.DATE.startsWith(savedDate))) {
+                    targetDate = savedDate;
+                } else if (data[0].DATE) {
+                    targetDate = data[0].DATE.split(" ")[0];
+                }
+                let dateInput = document.getElementById("date");
+                dateInput.value = targetDate;
+                updateCards();
+            }
+        }
+
+        function updateCards() {
+            let d = document.getElementById("date").value;
+            if (!d) return;
+            saveState();
+            let r = data.find(x => x.DATE.startsWith(d));
+            if (!r) {
+                document.getElementById("ttbuy").innerText = "-";
+                document.getElementById("ttsell").innerText = "-";
+                document.getElementById("billbuy").innerText = "-";
+                document.getElementById("inr").innerText = "-";
+                return;
+            }
+
+            document.getElementById("ttbuy").innerText = r["TT BUY"] || "-";
+            document.getElementById("ttsell").innerText = r["TT SELL"] || "-";
+            document.getElementById("billbuy").innerText = r["BILL BUY"] || "-";
+
+            convert();
+        }
+
+        document.getElementById("date").addEventListener("change", updateCards);
+        document.getElementById("usd").addEventListener("input", () => { saveState(); convert(); });
+
+        function convert() {
+            let d = document.getElementById("date").value;
+            let r = data.find(x => x.DATE.startsWith(d));
+            if (!r) return;
+            let rate = parseFloat(r["TT BUY"] || 0);
+            let inputAmt = parseFloat(document.getElementById("usd").value || 0);
+            let curr = document.getElementById("currencySelect").value;
+
+            if (rate > 0 && inputAmt > 0) {
+                if (!isSwapped) {
+                    let inrVal = inputAmt * rate;
+                    document.getElementById("inr").innerText = "₹" + inrVal.toLocaleString("en-IN", { maximumFractionDigits: 2 });
+                    document.getElementById("rateUsedText").innerText = `Rate: 1 ${curr} = ₹${rate}`;
+                } else {
+                    let foreignVal = inputAmt / rate;
+                    document.getElementById("inr").innerText = foreignVal.toLocaleString("en-US", { maximumFractionDigits: 2 }) + " " + curr;
+                    document.getElementById("rateUsedText").innerText = `Rate: ₹${rate} = 1 ${curr}`;
+                }
+            } else {
+                document.getElementById("inr").innerText = "-";
+                document.getElementById("rateUsedText").innerText = "\u00A0";
+            }
+        }
+
+        document.getElementById("theme").onclick = () => {
+            document.body.classList.toggle("dark");
+            const isDark = document.body.classList.contains("dark");
+            document.getElementById("theme").innerText = isDark ? "☀️" : "🌙";
+            localStorage.setItem("sbi_fx_theme", isDark ? "dark" : "light");
+        };
+
+        if (localStorage.getItem("sbi_fx_theme") === "dark") {
+            document.body.classList.add("dark");
+            document.getElementById("theme").innerText = "☀️";
+        }
+        document.getElementById('pdfModal').addEventListener('hidden.bs.modal', () => {
+            const containerEl = document.getElementById("pdfContainer");
+            if (containerEl) containerEl.innerHTML = "";
+            if (currentBlobUrl) {
+                URL.revokeObjectURL(currentBlobUrl);
+                currentBlobUrl = null;
+            }
+        });
+        restoreInitialState();
+        loadCSV();
+    </script>
+</body>
+
+</html>
